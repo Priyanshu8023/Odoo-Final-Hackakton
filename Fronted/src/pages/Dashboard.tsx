@@ -1,8 +1,8 @@
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { StatusWidget } from "@/components/dashboard/StatusWidget";
 import { ProductionChart } from "@/components/dashboard/ProductionChart";
 import { QuickActions } from "@/components/dashboard/QuickActions";
+import Header from "@/components/layout/Header";
 import { 
   Factory, 
   TrendingUp, 
@@ -82,7 +82,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-dashboard-bg">
-      <DashboardHeader />
+      <Header title="Dashboard" />
       
       <main className="p-6 space-y-6">
         {/* Key Metrics Row */}

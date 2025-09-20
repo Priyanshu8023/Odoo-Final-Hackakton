@@ -2,12 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Factory, BarChart3, Settings, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Header from "@/components/layout/Header";
 
 const Index = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-dashboard-bg">
+      <Header title="ManufactureOps" />
+      
       {/* Hero Section */}
       <section className="bg-gradient-primary text-primary-foreground py-20">
         <div className="container mx-auto px-6 text-center">
@@ -88,6 +91,7 @@ const Index = () => {
           </Button>
         </div>
       </section>
+
     </div>
   );
 };
