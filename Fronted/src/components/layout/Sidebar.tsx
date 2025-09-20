@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Menu, Users, Package, Receipt, BookOpen, Home, BarChart3, FileText, ShoppingCart } from "lucide-react";
+import { X, Menu, Users, Package, Receipt, BookOpen, Home, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -46,18 +46,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           icon: BarChart3,
           path: "/chart-of-accounts",
           description: "Manage accounting structure"
-        }
-      ]
-    },
-    {
-      title: "Data Input Forms",
-      icon: FileText,
-      children: [
-        {
-          title: "Purchase Order",
-          icon: ShoppingCart,
-          path: "/purchase-order",
-          description: "Create and manage purchase orders"
         }
       ]
     }
