@@ -1,22 +1,25 @@
-const Customer = require('../models/Customer');
+const Contact = require('../models/Contact');
 
 class CustomerController {
   static async createCustomer(req, res) {
     try {
-      const { name, contact_email, address } = req.body;
-      const created_by = req.user.id;
+      const { name, type, email, mobile, city, state, pincode, profile_image_url } = req.body;
       
-      const customer = await Customer.create({
+      const contact = await Contact.create({
         name,
-        contact_email,
-        address,
-        created_by
+        type: type || 'Customer',
+        email,
+        mobile,
+        city,
+        state,
+        pincode,
+        profile_image_url
       });
       
       res.status(201).json({
         success: true,
         message: 'Customer created successfully',
-        data: { customer }
+        data: { customer: contact }
       });
     } catch (error) {
       console.error('Create customer error:', error);
@@ -29,10 +32,7 @@ class CustomerController {
   
   static async getAllCustomers(req, res) {
     try {
-      const { include_archived } = req.query;
-      const includeArchived = include_archived === 'true';
-      
-      const customers = await Customer.getAll(includeArchived);
+      const customers = await Contact.getCustomers();
       
       res.json({
         success: true,
@@ -51,7 +51,7 @@ class CustomerController {
     try {
       const { id } = req.params;
       
-      const customer = await Customer.getById(id);
+      const customer = await Contact.getById(id);
       if (!customer) {
         return res.status(404).json({
           success: false,
@@ -75,10 +75,10 @@ class CustomerController {
   static async updateCustomer(req, res) {
     try {
       const { id } = req.params;
-      const { name, contact_email, address } = req.body;
+      const { name, type, email, mobile, city, state, pincode, profile_image_url } = req.body;
       
       // Check if customer exists
-      const existingCustomer = await Customer.getById(id);
+      const existingCustomer = await Contact.getById(id);
       if (!existingCustomer) {
         return res.status(404).json({
           success: false,
@@ -86,10 +86,15 @@ class CustomerController {
         });
       }
       
-      const customer = await Customer.update(id, {
+      const customer = await Contact.update(id, {
         name,
-        contact_email,
-        address
+        type,
+        email,
+        mobile,
+        city,
+        state,
+        pincode,
+        profile_image_url
       });
       
       res.json({
@@ -106,12 +111,12 @@ class CustomerController {
     }
   }
   
-  static async archiveCustomer(req, res) {
+  static async deleteCustomer(req, res) {
     try {
       const { id } = req.params;
       
       // Check if customer exists
-      const existingCustomer = await Customer.getById(id);
+      const existingCustomer = await Contact.getById(id);
       if (!existingCustomer) {
         return res.status(404).json({
           success: false,
@@ -119,47 +124,18 @@ class CustomerController {
         });
       }
       
-      const customer = await Customer.archive(id);
+      const customer = await Contact.delete(id);
       
       res.json({
         success: true,
-        message: 'Customer archived successfully',
+        message: 'Customer deleted successfully',
         data: { customer }
       });
     } catch (error) {
-      console.error('Archive customer error:', error);
+      console.error('Delete customer error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to archive customer'
-      });
-    }
-  }
-  
-  static async unarchiveCustomer(req, res) {
-    try {
-      const { id } = req.params;
-      
-      // Check if customer exists
-      const existingCustomer = await Customer.getById(id);
-      if (!existingCustomer) {
-        return res.status(404).json({
-          success: false,
-          message: 'Customer not found'
-        });
-      }
-      
-      const customer = await Customer.unarchive(id);
-      
-      res.json({
-        success: true,
-        message: 'Customer unarchived successfully',
-        data: { customer }
-      });
-    } catch (error) {
-      console.error('Unarchive customer error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to unarchive customer'
+        message: 'Failed to delete customer'
       });
     }
   }

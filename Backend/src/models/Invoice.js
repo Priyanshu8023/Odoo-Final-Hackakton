@@ -1,29 +1,48 @@
 const pool = require('../config/database');
 
 class Invoice {
-  static async create({ customer_id, issue_date, due_date, status, created_by, items }) {
+  static async create({ customer_id, sales_order_id, invoice_date, due_date, status, items }) {
     const client = await pool.connect();
     
     try {
       await client.query('BEGIN');
       
-      // Calculate total amount
-      const total_amount = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+      // Calculate total amount including taxes
+      let total_amount = 0;
+      for (const item of items) {
+        const subtotal = item.quantity * item.unit_price;
+        let tax_amount = 0;
+        
+        if (item.tax_id) {
+          // Get tax rate
+          const taxResult = await client.query('SELECT rate, computation_method FROM taxes WHERE id = $1', [item.tax_id]);
+          if (taxResult.rows.length > 0) {
+            const tax = taxResult.rows[0];
+            if (tax.computation_method === 'Percentage') {
+              tax_amount = (subtotal * tax.rate) / 100;
+            } else {
+              tax_amount = tax.rate; // Fixed amount
+            }
+          }
+        }
+        
+        total_amount += subtotal + tax_amount;
+      }
       
       // Create invoice
       const invoiceResult = await client.query(
-        'INSERT INTO invoices (customer_id, issue_date, due_date, total_amount, status, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [customer_id, issue_date, due_date, total_amount, status, created_by]
+        'INSERT INTO customer_invoices (customer_id, sales_order_id, invoice_date, due_date, total_amount, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [customer_id, sales_order_id, invoice_date, due_date, total_amount, status]
       );
       
       const invoice = invoiceResult.rows[0];
       
       // Create invoice items
       for (const item of items) {
-        const total_price = item.quantity * item.unit_price;
+        const subtotal = item.quantity * item.unit_price;
         await client.query(
-          'INSERT INTO invoice_items (invoice_id, product_id, quantity, unit_price, total_price) VALUES ($1, $2, $3, $4, $5)',
-          [invoice.id, item.product_id, item.quantity, item.unit_price, total_price]
+          'INSERT INTO customer_invoice_items (invoice_id, product_id, quantity, unit_price, tax_id, subtotal) VALUES ($1, $2, $3, $4, $5, $6)',
+          [invoice.id, item.product_id, item.quantity, item.unit_price, item.tax_id, subtotal]
         );
       }
       
@@ -43,14 +62,18 @@ class Invoice {
   static async getAll() {
     const result = await pool.query(`
       SELECT 
-        i.*,
+        ci.*,
         c.name as customer_name,
-        c.contact_email as customer_email,
-        u.email as created_by_email
-      FROM invoices i
-      LEFT JOIN customers c ON i.customer_id = c.id
-      LEFT JOIN users u ON i.created_by = u.id
-      ORDER BY i.created_at DESC
+        c.email as customer_email,
+        c.mobile as customer_mobile,
+        c.city as customer_city,
+        c.state as customer_state,
+        so.id as sales_order_id,
+        so.order_date as sales_order_date
+      FROM customer_invoices ci
+      LEFT JOIN contacts c ON ci.customer_id = c.id
+      LEFT JOIN sales_orders so ON ci.sales_order_id = so.id
+      ORDER BY ci.created_at DESC
     `);
     
     return result.rows;
@@ -59,15 +82,19 @@ class Invoice {
   static async getById(id) {
     const result = await pool.query(`
       SELECT 
-        i.*,
+        ci.*,
         c.name as customer_name,
-        c.contact_email as customer_email,
-        c.address as customer_address,
-        u.email as created_by_email
-      FROM invoices i
-      LEFT JOIN customers c ON i.customer_id = c.id
-      LEFT JOIN users u ON i.created_by = u.id
-      WHERE i.id = $1
+        c.email as customer_email,
+        c.mobile as customer_mobile,
+        c.city as customer_city,
+        c.state as customer_state,
+        c.pincode as customer_pincode,
+        so.id as sales_order_id,
+        so.order_date as sales_order_date
+      FROM customer_invoices ci
+      LEFT JOIN contacts c ON ci.customer_id = c.id
+      LEFT JOIN sales_orders so ON ci.sales_order_id = so.id
+      WHERE ci.id = $1
     `, [id]);
     
     return result.rows[0];
@@ -79,20 +106,25 @@ class Invoice {
     
     const itemsResult = await pool.query(`
       SELECT 
-        ii.*,
+        cii.*,
         p.name as product_name,
-        p.description as product_description
-      FROM invoice_items ii
-      LEFT JOIN products p ON ii.product_id = p.id
-      WHERE ii.invoice_id = $1
-      ORDER BY ii.id
+        p.type as product_type,
+        p.hsn_code,
+        t.tax_name,
+        t.rate as tax_rate,
+        t.computation_method as tax_method
+      FROM customer_invoice_items cii
+      LEFT JOIN products p ON cii.product_id = p.id
+      LEFT JOIN taxes t ON cii.tax_id = t.id
+      WHERE cii.invoice_id = $1
+      ORDER BY cii.id
     `, [id]);
     
     invoice.items = itemsResult.rows;
     return invoice;
   }
   
-  static async update(id, { customer_id, issue_date, due_date, status, items }) {
+  static async update(id, { customer_id, sales_order_id, invoice_date, due_date, status, items }) {
     const client = await pool.connect();
     
     try {
@@ -101,7 +133,26 @@ class Invoice {
       // Calculate total amount if items are provided
       let total_amount = null;
       if (items) {
-        total_amount = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+        total_amount = 0;
+        for (const item of items) {
+          const subtotal = item.quantity * item.unit_price;
+          let tax_amount = 0;
+          
+          if (item.tax_id) {
+            // Get tax rate
+            const taxResult = await client.query('SELECT rate, computation_method FROM taxes WHERE id = $1', [item.tax_id]);
+            if (taxResult.rows.length > 0) {
+              const tax = taxResult.rows[0];
+              if (tax.computation_method === 'Percentage') {
+                tax_amount = (subtotal * tax.rate) / 100;
+              } else {
+                tax_amount = tax.rate; // Fixed amount
+              }
+            }
+          }
+          
+          total_amount += subtotal + tax_amount;
+        }
       }
       
       // Update invoice
@@ -115,9 +166,15 @@ class Invoice {
         paramCount++;
       }
       
-      if (issue_date !== undefined) {
-        updateFields.push(`issue_date = $${paramCount}`);
-        updateValues.push(issue_date);
+      if (sales_order_id !== undefined) {
+        updateFields.push(`sales_order_id = $${paramCount}`);
+        updateValues.push(sales_order_id);
+        paramCount++;
+      }
+      
+      if (invoice_date !== undefined) {
+        updateFields.push(`invoice_date = $${paramCount}`);
+        updateValues.push(invoice_date);
         paramCount++;
       }
       
@@ -139,11 +196,10 @@ class Invoice {
         paramCount++;
       }
       
-      updateFields.push(`updated_at = NOW()`);
       updateValues.push(id);
       
       const updateQuery = `
-        UPDATE invoices 
+        UPDATE customer_invoices 
         SET ${updateFields.join(', ')} 
         WHERE id = $${paramCount} 
         RETURNING *
@@ -155,14 +211,14 @@ class Invoice {
       // Update invoice items if provided
       if (items) {
         // Delete existing items
-        await client.query('DELETE FROM invoice_items WHERE invoice_id = $1', [id]);
+        await client.query('DELETE FROM customer_invoice_items WHERE invoice_id = $1', [id]);
         
         // Insert new items
         for (const item of items) {
-          const total_price = item.quantity * item.unit_price;
+          const subtotal = item.quantity * item.unit_price;
           await client.query(
-            'INSERT INTO invoice_items (invoice_id, product_id, quantity, unit_price, total_price) VALUES ($1, $2, $3, $4, $5)',
-            [id, item.product_id, item.quantity, item.unit_price, total_price]
+            'INSERT INTO customer_invoice_items (invoice_id, product_id, quantity, unit_price, tax_id, subtotal) VALUES ($1, $2, $3, $4, $5, $6)',
+            [id, item.product_id, item.quantity, item.unit_price, item.tax_id, subtotal]
           );
         }
       }
@@ -182,8 +238,17 @@ class Invoice {
   
   static async updateStatus(id, status) {
     const result = await pool.query(
-      'UPDATE invoices SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      'UPDATE customer_invoices SET status = $1 WHERE id = $2 RETURNING *',
       [status, id]
+    );
+    
+    return result.rows[0];
+  }
+  
+  static async updateAmountPaid(id, amount_paid) {
+    const result = await pool.query(
+      'UPDATE customer_invoices SET amount_paid = $1 WHERE id = $2 RETURNING *',
+      [amount_paid, id]
     );
     
     return result.rows[0];
@@ -191,7 +256,7 @@ class Invoice {
   
   static async delete(id) {
     const result = await pool.query(
-      'DELETE FROM invoices WHERE id = $1 RETURNING *',
+      'DELETE FROM customer_invoices WHERE id = $1 RETURNING *',
       [id]
     );
     
@@ -201,33 +266,49 @@ class Invoice {
   static async getByCustomerId(customer_id) {
     const result = await pool.query(`
       SELECT 
-        i.*,
+        ci.*,
         c.name as customer_name,
-        c.contact_email as customer_email,
-        u.email as created_by_email
-      FROM invoices i
-      LEFT JOIN customers c ON i.customer_id = c.id
-      LEFT JOIN users u ON i.created_by = u.id
-      WHERE i.customer_id = $1
-      ORDER BY i.created_at DESC
+        c.email as customer_email,
+        c.mobile as customer_mobile
+      FROM customer_invoices ci
+      LEFT JOIN contacts c ON ci.customer_id = c.id
+      WHERE ci.customer_id = $1
+      ORDER BY ci.created_at DESC
     `, [customer_id]);
     
     return result.rows;
   }
   
-  static async getByCreatedBy(created_by) {
+  static async getByStatus(status) {
     const result = await pool.query(`
       SELECT 
-        i.*,
+        ci.*,
         c.name as customer_name,
-        c.contact_email as customer_email,
-        u.email as created_by_email
-      FROM invoices i
-      LEFT JOIN customers c ON i.customer_id = c.id
-      LEFT JOIN users u ON i.created_by = u.id
-      WHERE i.created_by = $1
-      ORDER BY i.created_at DESC
-    `, [created_by]);
+        c.email as customer_email,
+        c.mobile as customer_mobile
+      FROM customer_invoices ci
+      LEFT JOIN contacts c ON ci.customer_id = c.id
+      WHERE ci.status = $1
+      ORDER BY ci.created_at DESC
+    `, [status]);
+    
+    return result.rows;
+  }
+  
+  static async getOverdue() {
+    const result = await pool.query(`
+      SELECT 
+        ci.*,
+        c.name as customer_name,
+        c.email as customer_email,
+        c.mobile as customer_mobile
+      FROM customer_invoices ci
+      LEFT JOIN contacts c ON ci.customer_id = c.id
+      WHERE ci.due_date < CURRENT_DATE 
+        AND ci.status != 'Paid' 
+        AND ci.status != 'Cancelled'
+      ORDER BY ci.due_date ASC
+    `);
     
     return result.rows;
   }

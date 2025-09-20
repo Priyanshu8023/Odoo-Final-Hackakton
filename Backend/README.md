@@ -1,29 +1,38 @@
-# Invoicing Backend API
+# Comprehensive Accounting Backend API
 
-A complete backend API for a simple invoicing application built with Node.js, Express.js, and PostgreSQL.
+A complete backend API for a comprehensive accounting and invoicing application built with Node.js, Express.js, and PostgreSQL. This system implements double-entry bookkeeping, inventory management, and advanced business logic.
 
 ## Features
 
 - **User Authentication & Authorization**: JWT-based authentication with role-based access control
-- **User Roles**: Admin and Invoicing User with different permissions
-- **Master Data Management**: Customers and Products with CRUD operations
-- **Invoice Management**: Complete invoice lifecycle with line items
-- **Reporting**: Sales summaries and analytics
+- **User Roles**: Admin, Invoicing User, and Contact with different permissions
+- **Master Data Management**: Contacts (Customers/Vendors), Products, Taxes, Categories, Chart of Accounts
+- **Transaction Management**: Sales Orders, Purchase Orders, Customer Invoices, Vendor Bills
+- **Double-Entry Bookkeeping**: Journal entries and ledger postings
+- **Inventory Management**: Stock movements and tracking
+- **Tax Management**: Flexible tax computation (Percentage/Fixed) for sales and purchases
+- **Reporting**: Comprehensive sales summaries, financial reports, and analytics
 - **Security**: Helmet, CORS, rate limiting, input validation
 
 ## User Roles & Permissions
 
 ### Admin (Business Owner)
-- ✅ Create, Read, Update, Archive/Delete Customers
-- ✅ Create, Read, Update, Archive/Delete Products  
-- ✅ Create, Read, Update, Delete Invoices
-- ✅ View All Reports
+- ✅ Full access to all master data (Contacts, Products, Taxes, Categories, Chart of Accounts)
+- ✅ Create, Read, Update, Delete all transactions (Invoices, Bills, Orders)
+- ✅ Manage user accounts and roles
+- ✅ View all reports and analytics
+- ✅ Configure system settings
 
 ### Invoicing User (Accountant)
-- ✅ Create, Read Customers
+- ✅ Create, Read Contacts (Customers/Vendors)
 - ✅ Create, Read Products
-- ✅ Create, Read, Update, Delete Invoices
-- ✅ View All Reports
+- ✅ Create, Read, Update, Delete Invoices and Bills
+- ✅ View all reports and analytics
+- ❌ Cannot modify master data or user accounts
+
+### Contact (Customer/Vendor)
+- ✅ View own invoices and bills
+- ✅ Limited access to own account information
 
 ## API Endpoints
 
@@ -32,21 +41,19 @@ A complete backend API for a simple invoicing application built with Node.js, Ex
 - `POST /api/auth/login` - Login user
 - `GET /api/auth/profile` - Get user profile
 
-### Customers
-- `POST /api/customers` - Create customer (Admin, Invoicing User)
+### Contacts (Customers/Vendors)
+- `POST /api/customers` - Create contact (Admin, Invoicing User)
 - `GET /api/customers` - Get all customers (Admin, Invoicing User)
-- `GET /api/customers/:id` - Get customer by ID (Admin, Invoicing User)
-- `PUT /api/customers/:id` - Update customer (Admin only)
-- `PATCH /api/customers/:id/archive` - Archive customer (Admin only)
-- `PATCH /api/customers/:id/unarchive` - Unarchive customer (Admin only)
+- `GET /api/customers/:id` - Get contact by ID (Admin, Invoicing User)
+- `PUT /api/customers/:id` - Update contact (Admin only)
+- `DELETE /api/customers/:id` - Delete contact (Admin only)
 
 ### Products
 - `POST /api/products` - Create product (Admin, Invoicing User)
 - `GET /api/products` - Get all products (Admin, Invoicing User)
 - `GET /api/products/:id` - Get product by ID (Admin, Invoicing User)
 - `PUT /api/products/:id` - Update product (Admin only)
-- `PATCH /api/products/:id/archive` - Archive product (Admin only)
-- `PATCH /api/products/:id/unarchive` - Unarchive product (Admin only)
+- `DELETE /api/products/:id` - Delete product (Admin only)
 
 ### Invoices
 - `POST /api/invoices` - Create invoice (Admin, Invoicing User)
@@ -56,6 +63,23 @@ A complete backend API for a simple invoicing application built with Node.js, Ex
 - `PATCH /api/invoices/:id/status` - Update invoice status (Admin, Invoicing User)
 - `DELETE /api/invoices/:id` - Delete invoice (Admin, Invoicing User)
 - `GET /api/invoices/customer/:customer_id` - Get invoices by customer (Admin, Invoicing User)
+
+### Taxes
+- `POST /api/taxes` - Create tax (Admin only)
+- `GET /api/taxes` - Get all taxes (Admin, Invoicing User)
+- `GET /api/taxes/:id` - Get tax by ID (Admin, Invoicing User)
+- `PUT /api/taxes/:id` - Update tax (Admin only)
+- `DELETE /api/taxes/:id` - Delete tax (Admin only)
+- `GET /api/taxes/sales/list` - Get sales taxes (Admin, Invoicing User)
+- `GET /api/taxes/purchase/list` - Get purchase taxes (Admin, Invoicing User)
+
+### Product Categories
+- `POST /api/product-categories` - Create category (Admin only)
+- `GET /api/product-categories` - Get all categories (Admin, Invoicing User)
+- `GET /api/product-categories/:id` - Get category by ID (Admin, Invoicing User)
+- `PUT /api/product-categories/:id` - Update category (Admin only)
+- `DELETE /api/product-categories/:id` - Delete category (Admin only)
+- `GET /api/product-categories/with-count` - Get categories with product count (Admin, Invoicing User)
 
 ### Reports
 - `GET /api/reports/sales-summary` - Get sales summary (Admin, Invoicing User)
@@ -95,12 +119,29 @@ A complete backend API for a simple invoicing application built with Node.js, Ex
 
 ## Database Schema
 
-The application uses the following main tables:
-- `users` - User accounts with roles
-- `customers` - Customer master data
-- `products` - Product master data
-- `invoices` - Invoice transactions
-- `invoice_items` - Invoice line items
+The application uses a comprehensive accounting schema with the following main tables:
+
+### Master Data Tables
+- `users` - User accounts with roles and contact links
+- `contacts` - Customers and vendors (unified contact management)
+- `products` - Products and services with tax and category links
+- `taxes` - Tax rates and computation methods
+- `product_categories` - Product categorization
+- `chart_of_accounts` - Financial accounts for double-entry bookkeeping
+
+### Transaction Tables
+- `customer_invoices` - Customer invoices with line items
+- `customer_invoice_items` - Invoice line items with tax calculations
+- `vendor_bills` - Vendor bills with line items
+- `vendor_bill_items` - Bill line items with tax calculations
+- `sales_orders` - Sales orders (optional workflow)
+- `purchase_orders` - Purchase orders (optional workflow)
+
+### System Tables
+- `journal_entries` - Double-entry bookkeeping headers
+- `ledger_postings` - Debit/credit postings for each transaction
+- `payments` - Payment records linked to invoices/bills
+- `stock_movements` - Inventory tracking and movements
 
 ## Default Admin User
 

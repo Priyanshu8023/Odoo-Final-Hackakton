@@ -3,15 +3,14 @@ const Invoice = require('../models/Invoice');
 class InvoiceController {
   static async createInvoice(req, res) {
     try {
-      const { customer_id, issue_date, due_date, status, items } = req.body;
-      const created_by = req.user.id;
+      const { customer_id, sales_order_id, invoice_date, due_date, status, items } = req.body;
       
       const invoice = await Invoice.create({
         customer_id,
-        issue_date,
+        sales_order_id,
+        invoice_date,
         due_date,
         status,
-        created_by,
         items
       });
       
@@ -74,7 +73,7 @@ class InvoiceController {
   static async updateInvoice(req, res) {
     try {
       const { id } = req.params;
-      const { customer_id, issue_date, due_date, status, items } = req.body;
+      const { customer_id, sales_order_id, invoice_date, due_date, status, items } = req.body;
       
       // Check if invoice exists
       const existingInvoice = await Invoice.getById(id);
@@ -87,7 +86,8 @@ class InvoiceController {
       
       const invoice = await Invoice.update(id, {
         customer_id,
-        issue_date,
+        sales_order_id,
+        invoice_date,
         due_date,
         status,
         items

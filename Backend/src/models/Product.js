@@ -1,60 +1,59 @@
 const pool = require('../config/database');
 
 class Product {
-  static async create({ name, description, price, created_by }) {
+  static async create({ name, type, sales_price, purchase_price, hsn_code, category_id, sale_tax_id, purchase_tax_id }) {
     const result = await pool.query(
-      'INSERT INTO products (name, description, price, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, description, price, created_by]
+      'INSERT INTO products (name, type, sales_price, purchase_price, hsn_code, category_id, sale_tax_id, purchase_tax_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [name, type, sales_price, purchase_price, hsn_code, category_id, sale_tax_id, purchase_tax_id]
     );
     
     return result.rows[0];
   }
   
-  static async getAll(includeArchived = false) {
-    let query = 'SELECT * FROM products';
-    let params = [];
+  static async getAll() {
+    const result = await pool.query(`
+      SELECT 
+        p.*,
+        pc.name as category_name,
+        st.tax_name as sale_tax_name,
+        st.rate as sale_tax_rate,
+        pt.tax_name as purchase_tax_name,
+        pt.rate as purchase_tax_rate
+      FROM products p
+      LEFT JOIN product_categories pc ON p.category_id = pc.id
+      LEFT JOIN taxes st ON p.sale_tax_id = st.id
+      LEFT JOIN taxes pt ON p.purchase_tax_id = pt.id
+      ORDER BY p.created_at DESC
+    `);
     
-    if (!includeArchived) {
-      query += ' WHERE is_archived = FALSE';
-    }
-    
-    query += ' ORDER BY created_at DESC';
-    
-    const result = await pool.query(query, params);
     return result.rows;
   }
   
   static async getById(id) {
-    const result = await pool.query(
-      'SELECT * FROM products WHERE id = $1',
-      [id]
-    );
+    const result = await pool.query(`
+      SELECT 
+        p.*,
+        pc.name as category_name,
+        st.tax_name as sale_tax_name,
+        st.rate as sale_tax_rate,
+        st.computation_method as sale_tax_method,
+        pt.tax_name as purchase_tax_name,
+        pt.rate as purchase_tax_rate,
+        pt.computation_method as purchase_tax_method
+      FROM products p
+      LEFT JOIN product_categories pc ON p.category_id = pc.id
+      LEFT JOIN taxes st ON p.sale_tax_id = st.id
+      LEFT JOIN taxes pt ON p.purchase_tax_id = pt.id
+      WHERE p.id = $1
+    `, [id]);
     
     return result.rows[0];
   }
   
-  static async update(id, { name, description, price }) {
+  static async update(id, { name, type, sales_price, purchase_price, hsn_code, category_id, sale_tax_id, purchase_tax_id }) {
     const result = await pool.query(
-      'UPDATE products SET name = $1, description = $2, price = $3, updated_at = NOW() WHERE id = $4 RETURNING *',
-      [name, description, price, id]
-    );
-    
-    return result.rows[0];
-  }
-  
-  static async archive(id) {
-    const result = await pool.query(
-      'UPDATE products SET is_archived = TRUE, updated_at = NOW() WHERE id = $1 RETURNING *',
-      [id]
-    );
-    
-    return result.rows[0];
-  }
-  
-  static async unarchive(id) {
-    const result = await pool.query(
-      'UPDATE products SET is_archived = FALSE, updated_at = NOW() WHERE id = $1 RETURNING *',
-      [id]
+      'UPDATE products SET name = $1, type = $2, sales_price = $3, purchase_price = $4, hsn_code = $5, category_id = $6, sale_tax_id = $7, purchase_tax_id = $8 WHERE id = $9 RETURNING *',
+      [name, type, sales_price, purchase_price, hsn_code, category_id, sale_tax_id, purchase_tax_id, id]
     );
     
     return result.rows[0];
@@ -69,11 +68,62 @@ class Product {
     return result.rows[0];
   }
   
-  static async getByCreatedBy(created_by) {
-    const result = await pool.query(
-      'SELECT * FROM products WHERE created_by = $1 AND is_archived = FALSE ORDER BY created_at DESC',
-      [created_by]
-    );
+  static async getByType(type) {
+    const result = await pool.query(`
+      SELECT 
+        p.*,
+        pc.name as category_name,
+        st.tax_name as sale_tax_name,
+        st.rate as sale_tax_rate,
+        pt.tax_name as purchase_tax_name,
+        pt.rate as purchase_tax_rate
+      FROM products p
+      LEFT JOIN product_categories pc ON p.category_id = pc.id
+      LEFT JOIN taxes st ON p.sale_tax_id = st.id
+      LEFT JOIN taxes pt ON p.purchase_tax_id = pt.id
+      WHERE p.type = $1
+      ORDER BY p.created_at DESC
+    `, [type]);
+    
+    return result.rows;
+  }
+  
+  static async getByCategory(category_id) {
+    const result = await pool.query(`
+      SELECT 
+        p.*,
+        pc.name as category_name,
+        st.tax_name as sale_tax_name,
+        st.rate as sale_tax_rate,
+        pt.tax_name as purchase_tax_name,
+        pt.rate as purchase_tax_rate
+      FROM products p
+      LEFT JOIN product_categories pc ON p.category_id = pc.id
+      LEFT JOIN taxes st ON p.sale_tax_id = st.id
+      LEFT JOIN taxes pt ON p.purchase_tax_id = pt.id
+      WHERE p.category_id = $1
+      ORDER BY p.created_at DESC
+    `, [category_id]);
+    
+    return result.rows;
+  }
+  
+  static async searchByName(name) {
+    const result = await pool.query(`
+      SELECT 
+        p.*,
+        pc.name as category_name,
+        st.tax_name as sale_tax_name,
+        st.rate as sale_tax_rate,
+        pt.tax_name as purchase_tax_name,
+        pt.rate as purchase_tax_rate
+      FROM products p
+      LEFT JOIN product_categories pc ON p.category_id = pc.id
+      LEFT JOIN taxes st ON p.sale_tax_id = st.id
+      LEFT JOIN taxes pt ON p.purchase_tax_id = pt.id
+      WHERE p.name ILIKE $1
+      ORDER BY p.name
+    `, [`%${name}%`]);
     
     return result.rows;
   }

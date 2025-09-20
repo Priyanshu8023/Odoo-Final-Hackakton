@@ -3,14 +3,17 @@ const Product = require('../models/Product');
 class ProductController {
   static async createProduct(req, res) {
     try {
-      const { name, description, price } = req.body;
-      const created_by = req.user.id;
+      const { name, type, sales_price, purchase_price, hsn_code, category_id, sale_tax_id, purchase_tax_id } = req.body;
       
       const product = await Product.create({
         name,
-        description,
-        price,
-        created_by
+        type,
+        sales_price,
+        purchase_price,
+        hsn_code,
+        category_id,
+        sale_tax_id,
+        purchase_tax_id
       });
       
       res.status(201).json({
@@ -29,10 +32,7 @@ class ProductController {
   
   static async getAllProducts(req, res) {
     try {
-      const { include_archived } = req.query;
-      const includeArchived = include_archived === 'true';
-      
-      const products = await Product.getAll(includeArchived);
+      const products = await Product.getAll();
       
       res.json({
         success: true,
@@ -75,7 +75,7 @@ class ProductController {
   static async updateProduct(req, res) {
     try {
       const { id } = req.params;
-      const { name, description, price } = req.body;
+      const { name, type, sales_price, purchase_price, hsn_code, category_id, sale_tax_id, purchase_tax_id } = req.body;
       
       // Check if product exists
       const existingProduct = await Product.getById(id);
@@ -88,8 +88,13 @@ class ProductController {
       
       const product = await Product.update(id, {
         name,
-        description,
-        price
+        type,
+        sales_price,
+        purchase_price,
+        hsn_code,
+        category_id,
+        sale_tax_id,
+        purchase_tax_id
       });
       
       res.json({
@@ -106,7 +111,7 @@ class ProductController {
     }
   }
   
-  static async archiveProduct(req, res) {
+  static async deleteProduct(req, res) {
     try {
       const { id } = req.params;
       
@@ -119,47 +124,18 @@ class ProductController {
         });
       }
       
-      const product = await Product.archive(id);
+      const product = await Product.delete(id);
       
       res.json({
         success: true,
-        message: 'Product archived successfully',
+        message: 'Product deleted successfully',
         data: { product }
       });
     } catch (error) {
-      console.error('Archive product error:', error);
+      console.error('Delete product error:', error);
       res.status(500).json({
         success: false,
-        message: 'Failed to archive product'
-      });
-    }
-  }
-  
-  static async unarchiveProduct(req, res) {
-    try {
-      const { id } = req.params;
-      
-      // Check if product exists
-      const existingProduct = await Product.getById(id);
-      if (!existingProduct) {
-        return res.status(404).json({
-          success: false,
-          message: 'Product not found'
-        });
-      }
-      
-      const product = await Product.unarchive(id);
-      
-      res.json({
-        success: true,
-        message: 'Product unarchived successfully',
-        data: { product }
-      });
-    } catch (error) {
-      console.error('Unarchive product error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to unarchive product'
+        message: 'Failed to delete product'
       });
     }
   }
