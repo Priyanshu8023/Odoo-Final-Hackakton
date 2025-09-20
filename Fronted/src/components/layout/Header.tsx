@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, User, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 
 interface HeaderProps {
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 const Header = ({ title = "ManufactureOps", showMenu = true }: HeaderProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -39,9 +41,26 @@ const Header = ({ title = "ManufactureOps", showMenu = true }: HeaderProps) => {
               <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
             </div>
 
-            {/* Right side - Can add user menu, notifications, etc. */}
-            <div className="flex items-center space-x-4">
-              {/* Placeholder for future user menu or notifications */}
+            {/* Right side - Login/Signup and Create User Account buttons */}
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/login")}
+                className="flex items-center space-x-2"
+              >
+                <User className="h-4 w-4" />
+                <span>Login/Signup</span>
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate("/createid")}
+                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Create User</span>
+              </Button>
             </div>
           </div>
         </div>
