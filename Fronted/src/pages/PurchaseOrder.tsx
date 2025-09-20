@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Edit, Trash2, Save, Printer, X } from "lucide-react";
+import { Plus, Edit, Trash2, Save, Printer, X, FileText } from "lucide-react";
 import Header from "@/components/layout/Header";
 
 interface PurchaseOrderItem {
@@ -22,6 +23,8 @@ interface PurchaseOrderItem {
 }
 
 const PurchaseOrder = () => {
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     poNo: "",
     poDate: new Date().toISOString().split('T')[0],
@@ -119,6 +122,21 @@ const PurchaseOrder = () => {
   const handleCancel = () => {
     // TODO: Implement cancel functionality
     console.log("Canceling Purchase Order");
+  };
+
+  const handleCreateBill = () => {
+    // Navigate to vendor bill page with current form data
+    const billData = {
+      poNo: formData.poNo,
+      vendorName: formData.vendorName,
+      vendorRefNo: formData.vendorRefNo,
+      items: items,
+      totalAmount: getTotalAmount()
+    };
+    
+    // Store data in sessionStorage to pass to vendor bill page
+    sessionStorage.setItem('purchaseOrderData', JSON.stringify(billData));
+    navigate('/vendor-bill');
   };
 
   return (
@@ -287,7 +305,7 @@ const PurchaseOrder = () => {
                             type="number"
                             value={item.qty}
                             onChange={(e) => handleItemChange(item.id, 'qty', Number(e.target.value))}
-                            className="w-full"
+                            className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </TableCell>
                         <TableCell>
@@ -295,7 +313,7 @@ const PurchaseOrder = () => {
                             type="number"
                             value={item.rate}
                             onChange={(e) => handleItemChange(item.id, 'rate', Number(e.target.value))}
-                            className="w-full"
+                            className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </TableCell>
                         <TableCell>
@@ -303,7 +321,7 @@ const PurchaseOrder = () => {
                             type="number"
                             value={item.discount}
                             onChange={(e) => handleItemChange(item.id, 'discount', Number(e.target.value))}
-                            className="w-full"
+                            className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </TableCell>
                         <TableCell>
@@ -311,7 +329,7 @@ const PurchaseOrder = () => {
                             type="number"
                             value={item.tax}
                             onChange={(e) => handleItemChange(item.id, 'tax', Number(e.target.value))}
-                            className="w-full"
+                            className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                         </TableCell>
                         <TableCell>
@@ -363,6 +381,10 @@ const PurchaseOrder = () => {
               <Button variant="outline" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
                 Print
+              </Button>
+              <Button variant="outline" onClick={handleCreateBill}>
+                <FileText className="h-4 w-4 mr-2" />
+                Create Bill
               </Button>
               <Button onClick={handleSave}>
                 <Save className="h-4 w-4 mr-2" />

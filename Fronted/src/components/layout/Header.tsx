@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, User, UserPlus, LogOut } from "lucide-react";
+import { Menu, User, UserPlus, LogOut, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
@@ -29,13 +29,17 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
     navigate("/");
   };
 
+  const handleHome = () => {
+    navigate("/dashboard");
+  };
+
   return (
     <>
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Left side - Menu button and title */}
-            <div className="flex items-center space-x-4">
+            {/* Left side - Menu button, Home button and title */}
+            <div className="flex items-center space-x-2">
               {showMenu && (
                 <Button
                   variant="ghost"
@@ -46,7 +50,16 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
                   <Menu className="h-5 w-5" />
                 </Button>
               )}
-              <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleHome}
+                className="h-10 w-10 p-0 hover:bg-gray-100"
+                title="Go to Dashboard"
+              >
+                <Home className="h-5 w-5" />
+              </Button>
+              <h1 className="text-xl font-semibold text-gray-900 ml-2">{title}</h1>
             </div>
 
             {/* Right side - User info and actions */}
