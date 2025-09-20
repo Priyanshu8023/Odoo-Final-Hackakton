@@ -22,14 +22,24 @@ const Index = () => {
             Streamline your manufacturing operations with real-time monitoring, 
             analytics, and intelligent automation
           </p>
-          <Button 
-            variant="secondary" 
-            size="lg" 
-            onClick={() => navigate("/dashboard")}
-            className="shadow-custom-lg"
-          >
-            Access Dashboard
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button 
+              variant="secondary" 
+              size="lg" 
+              onClick={() => navigate("/dashboard")}
+              className="shadow-custom-lg"
+            >
+              Access Dashboard
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={() => navigate("/createid")}
+              className="shadow-custom-lg bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+            >
+              Create User Account
+            </Button>
+          </div>
         </div>
       </section>
 
