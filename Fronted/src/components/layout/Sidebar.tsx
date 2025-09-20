@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
 import { X, Menu, Users, Package, Receipt, BookOpen, Home, BarChart3, FileText, ShoppingCart, FileText as InvoiceIcon } from "lucide-react";
-=======
-import { X, Menu, Users, Package, Receipt, BookOpen, Home, BarChart3 } from "lucide-react";
->>>>>>> 60406f704e951c341911405784be2f619f102bfb
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -52,7 +48,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           description: "Manage accounting structure"
         }
       ]
-<<<<<<< HEAD
     },
     {
       title: "Data Input Forms",
@@ -71,10 +66,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       icon: InvoiceIcon,
       path: "/invoices",
       description: "View and manage all invoices"
-    },
-=======
     }
->>>>>>> 60406f704e951c341911405784be2f619f102bfb
   ];
 
   const handleNavigation = (path: string) => {
