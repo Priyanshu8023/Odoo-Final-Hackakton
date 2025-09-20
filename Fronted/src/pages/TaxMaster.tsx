@@ -8,6 +8,7 @@ import { TaxFormDialog } from "@/components/tax/TaxFormDialog";
 import Header from "@/components/layout/Header";
 import { apiClient, ApiError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useData } from "@/contexts/DataContext";
 
 interface Tax {
   id: string;
@@ -19,46 +20,25 @@ interface Tax {
 }
 
 const TaxMaster = () => {
-  const [taxes, setTaxes] = useState<Tax[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { 
+    taxes, 
+    taxesLoading, 
+    refreshTaxes, 
+    createTax: createTaxFromContext 
+  } = useData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTax, setEditingTax] = useState<Tax | null>(null);
   const { toast } = useToast();
 
-  const fetchTaxes = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.getTaxes();
-      if (response.success) {
-        setTaxes(response.data.taxes);
-      }
-    } catch (error) {
-      console.error("Error fetching taxes:", error);
-      toast({
-        title: "Error",
-        description: error instanceof ApiError ? error.message : "Failed to fetch taxes",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchTaxes();
-  }, []);
+    refreshTaxes();
+  }, [refreshTaxes]);
 
   const handleCreateTax = async (taxData: any) => {
     try {
       console.log("TaxMaster: handleCreateTax called with data:", taxData);
-      const response = await apiClient.createTax(taxData);
-      console.log("TaxMaster: API response:", response);
-      if (response.success) {
-        toast({
-          title: "Success",
-          description: "Tax created successfully",
-        });
-        fetchTaxes();
+      const success = await createTaxFromContext(taxData);
+      if (success) {
         setIsDialogOpen(false);
       }
     } catch (error) {
@@ -149,7 +129,7 @@ const TaxMaster = () => {
     }
   };
 
-  if (loading) {
+  if (taxesLoading) {
     return (
       <div className="min-h-screen bg-dashboard-bg">
         <Header title="Tax Master" />

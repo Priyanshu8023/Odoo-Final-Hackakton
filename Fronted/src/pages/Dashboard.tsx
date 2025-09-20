@@ -3,6 +3,8 @@ import { StatusWidget } from "@/components/dashboard/StatusWidget";
 import { ProductionChart } from "@/components/dashboard/ProductionChart";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import Header from "@/components/layout/Header";
+import { useData } from "@/contexts/DataContext";
+import { useEffect } from "react";
 import { 
   Factory, 
   TrendingUp, 
@@ -20,6 +22,13 @@ import {
 } from "lucide-react";
 
 const Dashboard = () => {
+  const { contacts, products, taxes, refreshAll } = useData();
+  
+  // Refresh all data when dashboard loads
+  useEffect(() => {
+    refreshAll();
+  }, [refreshAll]);
+  
   // Sample data for the dashboard
   const productionData = [
     { day: "Mon", planned: 100, actual: 95 },
@@ -88,36 +97,36 @@ const Dashboard = () => {
         {/* Key Metrics Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
-            title="Daily Production"
-            value="1,247"
-            change="+12.5% from yesterday"
+            title="Total Contacts"
+            value={contacts.length.toString()}
+            change={`${contacts.filter(c => c.type.includes('customer')).length} customers`}
+            changeType="positive"
+            icon={Users}
+            description="Total contacts in system"
+          />
+          <MetricCard
+            title="Total Products"
+            value={products.length.toString()}
+            change={`${products.filter(p => p.type === 'goods').length} goods`}
             changeType="positive"
             icon={Factory}
-            description="Units produced today"
+            description="Products available"
           />
           <MetricCard
-            title="Efficiency Rate"
-            value="94.2%"
-            change="+2.1% from last week"
-            changeType="positive"
+            title="Tax Rates"
+            value={taxes.length.toString()}
+            change={`${taxes.filter(t => t.applicable_on === 'Both').length} applicable to both`}
+            changeType="neutral"
             icon={TrendingUp}
-            description="Overall equipment effectiveness"
+            description="Tax rates configured"
           />
           <MetricCard
-            title="Downtime"
-            value="23 min"
-            change="-15 min from yesterday"
+            title="System Status"
+            value="Active"
+            change="All systems operational"
             changeType="positive"
             icon={Clock}
-            description="Total downtime today"
-          />
-          <MetricCard
-            title="Active Workers"
-            value="28"
-            change="All stations covered"
-            changeType="neutral"
-            icon={Users}
-            description="On current shift"
+            description="Real-time data sync"
           />
         </div>
 

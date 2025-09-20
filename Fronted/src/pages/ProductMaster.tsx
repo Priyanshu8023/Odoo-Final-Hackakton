@@ -8,6 +8,7 @@ import { ProductFormDialog } from "@/components/product/ProductFormDialog";
 import Header from "@/components/layout/Header";
 import { apiClient, ApiError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useData } from "@/contexts/DataContext";
 
 interface Product {
   id: string;
@@ -28,34 +29,19 @@ interface Product {
 }
 
 const ProductMaster = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { 
+    products, 
+    productsLoading, 
+    refreshProducts, 
+    createProduct: createProductFromContext 
+  } = useData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const { toast } = useToast();
 
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.getProducts();
-      if (response.success) {
-        setProducts(response.data.products);
-      }
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: error instanceof ApiError ? error.message : "Failed to fetch products",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    refreshProducts();
+  }, [refreshProducts]);
 
   const handleCreateProduct = async (productData: any) => {
     try {
@@ -73,15 +59,8 @@ const ProductMaster = () => {
       
       console.log("ProductMaster: transformed backend data:", backendData);
       
-      const response = await apiClient.createProduct(backendData);
-      console.log("ProductMaster: API response:", response);
-      
-      if (response.success) {
-        toast({
-          title: "Success",
-          description: "Product created successfully",
-        });
-        fetchProducts();
+      const success = await createProductFromContext(backendData);
+      if (success) {
         setIsDialogOpen(false);
       }
     } catch (error) {
@@ -169,7 +148,7 @@ const ProductMaster = () => {
     }
   };
 
-  if (loading) {
+  if (productsLoading) {
     return (
       <div className="min-h-screen bg-dashboard-bg">
         <Header title="Product Master" />
