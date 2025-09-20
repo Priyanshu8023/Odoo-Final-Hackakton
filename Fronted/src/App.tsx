@@ -11,6 +11,7 @@ import ContactMaster from "./pages/ContactMaster";
 import ProductMaster from "./pages/ProductMaster";
 import TaxMaster from "./pages/TaxMaster";
 import ChartOfAccounts from "./pages/ChartOfAccounts";
+import PurchaseOrder from "./pages/PurchaseOrder";
 import CreateId from "./pages/createid";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
@@ -76,6 +77,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <ChartOfAccounts />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/purchase-order" 
+                element={
+                  <ProtectedRoute>
+                    <PurchaseOrder />
                   </ProtectedRoute>
                 } 
               />
