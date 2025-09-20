@@ -19,11 +19,8 @@ router.get('/:id', adminOrInvoicingUser, ProductController.getProductById);
 // Update product - Admin only
 router.put('/:id', adminOnly, validate(productUpdateSchema), ProductController.updateProduct);
 
-// Archive product - Admin only
-router.patch('/:id/archive', adminOnly, ProductController.archiveProduct);
-
-// Unarchive product - Admin only
-router.patch('/:id/unarchive', adminOnly, ProductController.unarchiveProduct);
+// Delete product - Admin only
+router.delete('/:id', adminOnly, ProductController.deleteProduct);
 
 module.exports = router;
 

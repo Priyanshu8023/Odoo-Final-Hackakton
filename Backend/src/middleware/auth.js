@@ -83,12 +83,12 @@ const authorize = (allowedRoles) => {
 /**
  * Admin only middleware
  */
-const adminOnly = authorize(['admin']);
+const adminOnly = authorize(['Admin']);
 
 /**
  * Admin or Invoicing User middleware
  */
-const adminOrInvoicingUser = authorize(['admin', 'invoicing_user']);
+const adminOrInvoicingUser = authorize(['Admin', 'Invoicing User']);
 
 module.exports = {
   authenticate,
