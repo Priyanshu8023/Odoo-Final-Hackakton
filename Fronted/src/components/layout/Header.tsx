@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Menu, User, UserPlus } from "lucide-react";
+import { Menu, User, UserPlus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 
@@ -9,8 +10,13 @@ interface HeaderProps {
   showMenu?: boolean;
 }
 
-const Header = ({ title = "ManufactureOps", showMenu = true }: HeaderProps) => {
+const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // This would come from auth context in real app
+  const [userInfo, setUserInfo] = useState({
+    loginId: "admin_user",
+    profilePic: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+  });
   const navigate = useNavigate();
 
   const toggleSidebar = () => {
@@ -19,6 +25,11 @@ const Header = ({ title = "ManufactureOps", showMenu = true }: HeaderProps) => {
 
   const closeSidebar = () => {
     setIsSidebarOpen(false);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    navigate("/");
   };
 
   return (
@@ -41,26 +52,42 @@ const Header = ({ title = "ManufactureOps", showMenu = true }: HeaderProps) => {
               <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
             </div>
 
-            {/* Right side - Login/Signup and Create User Account buttons */}
+            {/* Right side - User profile or Login/Signup buttons */}
             <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/login")}
-                className="flex items-center space-x-2"
-              >
-                <User className="h-4 w-4" />
-                <span>Login/Signup</span>
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => navigate("/createid")}
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-              >
-                <UserPlus className="h-4 w-4" />
-                <span>Create User</span>
-              </Button>
+              {isLoggedIn ? (
+                // User is logged in - show profile
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-full border border-blue-200">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={userInfo.profilePic} alt={userInfo.loginId} />
+                      <AvatarFallback>
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium text-gray-700">{userInfo.loginId}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2 text-gray-600 hover:text-red-600"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </Button>
+                </div>
+              ) : (
+                // User is not logged in - show login/signup button only
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate("/login")}
+                  className="flex items-center space-x-2"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Login/Signup</span>
+                </Button>
+              )}
             </div>
           </div>
         </div>

@@ -98,30 +98,39 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Back to Home Button */}
-        <div className="flex justify-start">
-          <Button
-            variant="ghost"
-            onClick={handleBackToHome}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Home</span>
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute top-20 left-20 w-32 h-32 bg-blue-200/30 rounded-full blur-2xl"></div>
+      <div className="absolute bottom-20 right-20 w-40 h-40 bg-blue-300/20 rounded-full blur-3xl"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"></div>
+      
+      <div className="relative z-10 flex items-center justify-center min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-6">
+          {/* Back to Home Button - positioned at top left */}
+          <div className="absolute -top-16 left-0">
+            <Button
+              variant="ghost"
+              onClick={handleBackToHome}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Home</span>
+            </Button>
+          </div>
 
         {/* Login Form Card */}
-        <Card className="border-2 border-blue-200 shadow-lg bg-white">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
-            <CardTitle className="flex items-center justify-center space-x-2 text-xl">
-              <LogIn className="h-6 w-6" />
-              <span>Login</span>
+        <Card className="border-2 border-blue-300 shadow-2xl bg-white/95 backdrop-blur-sm rounded-2xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white py-6">
+            <CardTitle className="flex items-center justify-center space-x-3 text-2xl font-bold">
+              <div className="p-2 bg-white/20 rounded-full">
+                <LogIn className="h-6 w-6" />
+              </div>
+              <span>Welcome Back</span>
             </CardTitle>
+            <p className="text-center text-blue-100 mt-2">Sign in to your account</p>
           </CardHeader>
           
-          <CardContent className="p-8">
+          <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Login ID Field */}
               <div className="space-y-2">
@@ -211,6 +220,7 @@ const Login = () => {
             </form>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
