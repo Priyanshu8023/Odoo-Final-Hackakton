@@ -1,0 +1,390 @@
+import { useState } from "react";
+import { Eye, EyeOff, UserPlus, ArrowLeft, CheckCircle, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
+
+interface SignupFormData {
+  name: string;
+  loginId: string;
+  email: string;
+  password: string;
+  reEnterPassword: string;
+}
+
+interface ValidationErrors {
+  name?: string;
+  loginId?: string;
+  email?: string;
+  password?: string;
+  reEnterPassword?: string;
+}
+
+const Signup = () => {
+  const [formData, setFormData] = useState<SignupFormData>({
+    name: "",
+    loginId: "",
+    email: "",
+    password: "",
+    reEnterPassword: "",
+  });
+
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showReEnterPassword, setShowReEnterPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleInputChange = (field: keyof SignupFormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: ValidationErrors = {};
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    // Login ID validation
+    if (!formData.loginId.trim()) {
+      newErrors.loginId = "Login ID is required";
+    } else if (formData.loginId.length < 6 || formData.loginId.length > 12) {
+      newErrors.loginId = "Login ID must be between 6-12 characters";
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters long";
+    } else if (!/(?=.*[a-z])/.test(formData.password)) {
+      newErrors.password = "Password must contain at least one lowercase letter";
+    } else if (!/(?=.*[A-Z])/.test(formData.password)) {
+      newErrors.password = "Password must contain at least one uppercase letter";
+    } else if (!/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(formData.password)) {
+      newErrors.password = "Password must contain at least one special character";
+    }
+
+    // Re-enter password validation
+    if (!formData.reEnterPassword) {
+      newErrors.reEnterPassword = "Please re-enter your password";
+    } else if (formData.password !== formData.reEnterPassword) {
+      newErrors.reEnterPassword = "Passwords do not match";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Reset form on success
+      setFormData({
+        name: "",
+        loginId: "",
+        email: "",
+        password: "",
+        reEnterPassword: "",
+      });
+      
+      // Show success message and redirect to login
+      alert("Account created successfully! Please login with your credentials.");
+      navigate("/login");
+      
+    } catch (error) {
+      console.error("Error creating account:", error);
+      alert("Error creating account. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBackToHome = () => {
+    navigate("/");
+  };
+
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+  const getPasswordStrength = () => {
+    const password = formData.password;
+    if (!password) return { strength: 0, text: "" };
+    
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/(?=.*[a-z])/.test(password)) strength++;
+    if (/(?=.*[A-Z])/.test(password)) strength++;
+    if (/(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/.test(password)) strength++;
+    
+    const strengthText = ["Very Weak", "Weak", "Fair", "Good", "Strong"][strength];
+    return { strength, text: strengthText };
+  };
+
+  const passwordStrength = getPasswordStrength();
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        {/* Back to Home Button */}
+        <div className="flex justify-start">
+          <Button
+            variant="ghost"
+            onClick={handleBackToHome}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Home</span>
+          </Button>
+        </div>
+
+        {/* Signup Form Card */}
+        <Card className="border-2 border-blue-200 shadow-lg bg-white">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
+            <CardTitle className="flex items-center justify-center space-x-2 text-xl">
+              <UserPlus className="h-6 w-6" />
+              <span>Sign Up</span>
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Name Field */}
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                  Name *
+                </Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  placeholder="Enter full name"
+                  className={`${errors.name ? "border-red-500 focus:ring-red-500" : ""}`}
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-600 flex items-center space-x-1">
+                    <XCircle className="h-4 w-4" />
+                    <span>{errors.name}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Login ID Field */}
+              <div className="space-y-2">
+                <Label htmlFor="loginId" className="text-sm font-medium text-gray-700">
+                  Login ID *
+                </Label>
+                <Input
+                  id="loginId"
+                  value={formData.loginId}
+                  onChange={(e) => handleInputChange("loginId", e.target.value)}
+                  placeholder="Enter login ID (6-12 characters)"
+                  className={`${errors.loginId ? "border-red-500 focus:ring-red-500" : ""}`}
+                />
+                {errors.loginId && (
+                  <p className="text-sm text-red-600 flex items-center space-x-1">
+                    <XCircle className="h-4 w-4" />
+                    <span>{errors.loginId}</span>
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Must be unique and between 6-12 characters
+                </p>
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email ID *
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  placeholder="Enter email address"
+                  className={`${errors.email ? "border-red-500 focus:ring-red-500" : ""}`}
+                />
+                {errors.email && (
+                  <p className="text-sm text-red-600 flex items-center space-x-1">
+                    <XCircle className="h-4 w-4" />
+                    <span>{errors.email}</span>
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Must be unique and valid email format
+                </p>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password *
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    placeholder="Enter password"
+                    className={`pr-10 ${errors.password ? "border-red-500 focus:ring-red-500" : ""}`}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-600 flex items-center space-x-1">
+                    <XCircle className="h-4 w-4" />
+                    <span>{errors.password}</span>
+                  </p>
+                )}
+                
+                {/* Password Strength Indicator */}
+                {formData.password && (
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            passwordStrength.strength <= 1
+                              ? "bg-red-500"
+                              : passwordStrength.strength <= 2
+                              ? "bg-yellow-500"
+                              : passwordStrength.strength <= 3
+                              ? "bg-blue-500"
+                              : "bg-green-500"
+                          }`}
+                          style={{ width: `${(passwordStrength.strength / 4) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-600">
+                        {passwordStrength.text}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Must contain: lowercase, uppercase, special character, min 8 characters
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Re-enter Password Field */}
+              <div className="space-y-2">
+                <Label htmlFor="reEnterPassword" className="text-sm font-medium text-gray-700">
+                  Re-enter Password *
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="reEnterPassword"
+                    type={showReEnterPassword ? "text" : "password"}
+                    value={formData.reEnterPassword}
+                    onChange={(e) => handleInputChange("reEnterPassword", e.target.value)}
+                    placeholder="Re-enter password"
+                    className={`pr-10 ${errors.reEnterPassword ? "border-red-500 focus:ring-red-500" : ""}`}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowReEnterPassword(!showReEnterPassword)}
+                  >
+                    {showReEnterPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </Button>
+                </div>
+                {errors.reEnterPassword && (
+                  <p className="text-sm text-red-600 flex items-center space-x-1">
+                    <XCircle className="h-4 w-4" />
+                    <span>{errors.reEnterPassword}</span>
+                  </p>
+                )}
+                {formData.reEnterPassword && formData.password === formData.reEnterPassword && (
+                  <p className="text-sm text-green-600 flex items-center space-x-1">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Passwords match</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Sign Up Button */}
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                {isSubmitting ? "Creating Account..." : "Sign Up"}
+              </Button>
+
+              {/* Login Link */}
+              <div className="text-center pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={handleLogin}
+                    className="text-blue-600 hover:text-blue-800 p-0 h-auto font-medium"
+                  >
+                    Login here
+                  </Button>
+                </p>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default Signup;

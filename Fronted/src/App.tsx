@@ -9,6 +9,9 @@ import ContactMaster from "./pages/ContactMaster";
 import ProductMaster from "./pages/ProductMaster";
 import TaxMaster from "./pages/TaxMaster";
 import ChartOfAccounts from "./pages/ChartOfAccounts";
+import CreateId from "./pages/createid";
+import Login from "./pages/login";
+import Signup from "./pages/signup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,7 +24,10 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/createid" element={<CreateId />} />
           <Route path="/contact-master" element={<ContactMaster />} />
           <Route path="/product-master" element={<ProductMaster />} />
           <Route path="/taxes-master" element={<TaxMaster />} />
