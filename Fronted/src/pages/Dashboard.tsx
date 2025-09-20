@@ -137,7 +137,7 @@ const Dashboard = () => {
             actions={quickActions}
           />
         </div>
-
+        
         {/* Bottom Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Equipment Status */}
