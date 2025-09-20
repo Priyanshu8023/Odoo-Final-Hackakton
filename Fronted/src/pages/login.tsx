@@ -5,20 +5,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface LoginFormData {
-  loginId: string;
+  email: string;
   password: string;
 }
 
 interface ValidationErrors {
-  loginId?: string;
+  email?: string;
   password?: string;
 }
 
 const Login = () => {
   const [formData, setFormData] = useState<LoginFormData>({
-    loginId: "",
+    email: "",
     password: "",
   });
 
@@ -27,6 +29,8 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
+  const { login, loading, error } = useAuth();
+  const { toast } = useToast();
 
   const handleInputChange = (field: keyof LoginFormData, value: string) => {
     setFormData(prev => ({
@@ -46,9 +50,11 @@ const Login = () => {
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {};
 
-    // Login ID validation
-    if (!formData.loginId.trim()) {
-      newErrors.loginId = "Login ID is required";
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
     }
 
     // Password validation
@@ -70,15 +76,19 @@ const Login = () => {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // On successful login, redirect to dashboard
+      await login(formData.email, formData.password);
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
       navigate("/dashboard");
-      
     } catch (error) {
       console.error("Error logging in:", error);
-      alert("Invalid login credentials. Please try again.");
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Invalid credentials. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -132,20 +142,21 @@ const Login = () => {
           
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Login ID Field */}
+              {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="loginId" className="text-sm font-medium text-gray-700">
-                  Login ID *
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email *
                 </Label>
                 <Input
-                  id="loginId"
-                  value={formData.loginId}
-                  onChange={(e) => handleInputChange("loginId", e.target.value)}
-                  placeholder="Enter your login ID"
-                  className={`${errors.loginId ? "border-red-500 focus:ring-red-500" : ""}`}
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  placeholder="Enter your email"
+                  className={`${errors.email ? "border-red-500 focus:ring-red-500" : ""}`}
                 />
-                {errors.loginId && (
-                  <p className="text-sm text-red-600">{errors.loginId}</p>
+                {errors.email && (
+                  <p className="text-sm text-red-600">{errors.email}</p>
                 )}
               </div>
 

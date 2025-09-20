@@ -1,5 +1,5 @@
 const { verifyToken, extractTokenFromHeader } = require('../utils/jwt');
-const pool = require('../config/database');
+const User = require('../models/User');
 
 /**
  * Authentication middleware - verifies JWT token
@@ -19,19 +19,21 @@ const authenticate = async (req, res, next) => {
     const decoded = verifyToken(token);
     
     // Verify user still exists in database
-    const result = await pool.query(
-      'SELECT id, email, role FROM users WHERE id = $1',
-      [decoded.id]
-    );
+    const user = await User.findById(decoded.id);
     
-    if (result.rows.length === 0) {
+    if (!user || !user.isActive) {
       return res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found or inactive'
       });
     }
     
-    req.user = result.rows[0];
+    req.user = {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      organizationId: user.organizationId
+    };
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
@@ -83,12 +85,12 @@ const authorize = (allowedRoles) => {
 /**
  * Admin only middleware
  */
-const adminOnly = authorize(['Admin']);
+const adminOnly = authorize(['admin']);
 
 /**
  * Admin or Invoicing User middleware
  */
-const adminOrInvoicingUser = authorize(['Admin', 'Invoicing User']);
+const adminOrInvoicingUser = authorize(['admin', 'invoicing_user']);
 
 module.exports = {
   authenticate,

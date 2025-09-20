@@ -4,8 +4,8 @@ const Joi = require('joi');
 const userRegistrationSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
-  role: Joi.string().valid('Admin', 'Invoicing User', 'Contact').default('Invoicing User'),
-  contact_id: Joi.number().integer().positive().allow(null)
+  role: Joi.string().valid('admin', 'invoicing_user', 'contact_user').default('invoicing_user'),
+  name: Joi.string().min(1).max(255).required()
 });
 
 const userLoginSchema = Joi.object({
@@ -16,24 +16,28 @@ const userLoginSchema = Joi.object({
 // Contact validation schemas
 const contactCreateSchema = Joi.object({
   name: Joi.string().min(1).max(255).required(),
-  type: Joi.string().valid('Customer', 'Vendor', 'Both').required(),
+  type: Joi.array().items(Joi.string().valid('customer', 'vendor')).min(1).required(),
   email: Joi.string().email().allow('', null),
   mobile: Joi.string().max(20).allow('', null),
-  city: Joi.string().max(100).allow('', null),
-  state: Joi.string().max(100).allow('', null),
-  pincode: Joi.string().max(10).allow('', null),
-  profile_image_url: Joi.string().uri().allow('', null)
+  address: Joi.object({
+    city: Joi.string().max(100).allow('', null),
+    state: Joi.string().max(100).allow('', null),
+    pincode: Joi.string().max(10).allow('', null)
+  }).optional(),
+  profileImageURL: Joi.string().uri().allow('', null)
 });
 
 const contactUpdateSchema = Joi.object({
   name: Joi.string().min(1).max(255),
-  type: Joi.string().valid('Customer', 'Vendor', 'Both'),
+  type: Joi.array().items(Joi.string().valid('customer', 'vendor')).min(1),
   email: Joi.string().email().allow('', null),
   mobile: Joi.string().max(20).allow('', null),
-  city: Joi.string().max(100).allow('', null),
-  state: Joi.string().max(100).allow('', null),
-  pincode: Joi.string().max(10).allow('', null),
-  profile_image_url: Joi.string().uri().allow('', null)
+  address: Joi.object({
+    city: Joi.string().max(100).allow('', null),
+    state: Joi.string().max(100).allow('', null),
+    pincode: Joi.string().max(10).allow('', null)
+  }).optional(),
+  profileImageURL: Joi.string().uri().allow('', null)
 });
 
 // Product validation schemas

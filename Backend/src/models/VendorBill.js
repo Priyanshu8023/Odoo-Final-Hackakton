@@ -39,24 +39,24 @@ const lineItemSchema = new mongoose.Schema({
   }
 });
 
-const invoiceSchema = new mongoose.Schema({
+const vendorBillSchema = new mongoose.Schema({
   organizationId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Organization', 
     required: true 
   },
-  invoiceNumber: { 
+  billNumber: { 
     type: String, 
     required: true,
     unique: true,
     trim: true 
   },
-  customerId: { 
+  vendorId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Contact', 
     required: true 
   },
-  invoiceDate: { 
+  billDate: { 
     type: Date, 
     required: true 
   },
@@ -64,13 +64,13 @@ const invoiceSchema = new mongoose.Schema({
     type: Date, 
     required: true 
   },
-  salesOrderId: { 
+  purchaseOrderId: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'SalesOrder' 
+    ref: 'PurchaseOrder' 
   },
   status: { 
     type: String, 
-    enum: ['draft', 'sent', 'paid', 'partially_paid', 'void'],
+    enum: ['draft', 'awaiting_payment', 'paid', 'void'],
     default: 'draft',
     required: true 
   },
@@ -100,40 +100,40 @@ const invoiceSchema = new mongoose.Schema({
 });
 
 // Indexes for better performance
-invoiceSchema.index({ organizationId: 1 });
-invoiceSchema.index({ organizationId: 1, customerId: 1 });
-invoiceSchema.index({ organizationId: 1, status: 1 });
-invoiceSchema.index({ organizationId: 1, invoiceDate: 1 });
-invoiceSchema.index({ invoiceNumber: 1 });
+vendorBillSchema.index({ organizationId: 1 });
+vendorBillSchema.index({ organizationId: 1, vendorId: 1 });
+vendorBillSchema.index({ organizationId: 1, status: 1 });
+vendorBillSchema.index({ organizationId: 1, billDate: 1 });
+vendorBillSchema.index({ billNumber: 1 });
 
 // Virtual for formatted amounts
-invoiceSchema.virtual('formattedSubTotal').get(function() {
+vendorBillSchema.virtual('formattedSubTotal').get(function() {
   return parseFloat(this.subTotal.toString());
 });
 
-invoiceSchema.virtual('formattedTotalTax').get(function() {
+vendorBillSchema.virtual('formattedTotalTax').get(function() {
   return parseFloat(this.totalTax.toString());
 });
 
-invoiceSchema.virtual('formattedGrandTotal').get(function() {
+vendorBillSchema.virtual('formattedGrandTotal').get(function() {
   return parseFloat(this.grandTotal.toString());
 });
 
-invoiceSchema.virtual('formattedAmountPaid').get(function() {
+vendorBillSchema.virtual('formattedAmountPaid').get(function() {
   return parseFloat(this.amountPaid.toString());
 });
 
-invoiceSchema.virtual('formattedBalanceDue').get(function() {
+vendorBillSchema.virtual('formattedBalanceDue').get(function() {
   return parseFloat(this.balanceDue.toString());
 });
 
-// Pre-save middleware to generate invoice number
-invoiceSchema.pre('save', async function(next) {
-  if (this.isNew && !this.invoiceNumber) {
+// Pre-save middleware to generate bill number
+vendorBillSchema.pre('save', async function(next) {
+  if (this.isNew && !this.billNumber) {
     const count = await this.constructor.countDocuments({ organizationId: this.organizationId });
-    this.invoiceNumber = `INV-${new Date().getFullYear()}-${String(count + 1).padStart(3, '0')}`;
+    this.billNumber = `BILL-${new Date().getFullYear()}-${String(count + 1).padStart(3, '0')}`;
   }
   next();
 });
 
-module.exports = mongoose.model('Invoice', invoiceSchema);
+module.exports = mongoose.model('VendorBill', vendorBillSchema);

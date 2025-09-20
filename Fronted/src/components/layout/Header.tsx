@@ -3,6 +3,7 @@ import { Menu, User, UserPlus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Sidebar from "./Sidebar";
 
 interface HeaderProps {
@@ -18,6 +19,7 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
     profilePic: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
   });
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -28,7 +30,11 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
   };
 
   const handleLogout = () => {
+<<<<<<< Updated upstream
     setIsLoggedIn(false);
+=======
+    logout();
+>>>>>>> Stashed changes
     navigate("/");
   };
 
@@ -52,6 +58,7 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
               <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
             </div>
 
+<<<<<<< Updated upstream
             {/* Right side - User profile or Login/Signup buttons */}
             <div className="flex items-center space-x-3">
               {isLoggedIn ? (
@@ -71,10 +78,29 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
                     size="sm"
                     onClick={handleLogout}
                     className="flex items-center space-x-2 text-gray-600 hover:text-red-600"
+=======
+            {/* Right side - User info and actions */}
+            <div className="flex items-center space-x-3">
+              {user ? (
+                <>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <User className="h-4 w-4" />
+                    <span>{user.email}</span>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      {user.role}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2"
+>>>>>>> Stashed changes
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
                   </Button>
+<<<<<<< Updated upstream
                 </div>
               ) : (
                 // User is not logged in - show login/signup button only
@@ -87,6 +113,30 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
                   <User className="h-4 w-4" />
                   <span>Login/Signup</span>
                 </Button>
+=======
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/login")}
+                    className="flex items-center space-x-2"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Login</span>
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => navigate("/signup")}
+                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Sign Up</span>
+                  </Button>
+                </>
+>>>>>>> Stashed changes
               )}
             </div>
           </div>

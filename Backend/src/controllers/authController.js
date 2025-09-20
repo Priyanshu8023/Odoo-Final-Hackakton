@@ -1,13 +1,14 @@
 const User = require('../models/User');
+const Organization = require('../models/Organization');
 const { generateToken } = require('../utils/jwt');
 
 class AuthController {
   static async register(req, res) {
     try {
-      const { email, password, role } = req.body;
+      const { email, password, role, name } = req.body;
       
       // Check if user already exists
-      const existingUser = await User.findByEmail(email);
+      const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(409).json({
           success: false,
@@ -15,8 +16,26 @@ class AuthController {
         });
       }
       
+      // Get default organization (for now, we'll use the first one)
+      const organization = await Organization.findOne();
+      if (!organization) {
+        return res.status(500).json({
+          success: false,
+          message: 'No organization found. Please run migration first.'
+        });
+      }
+      
       // Create new user
-      const user = await User.create({ email, password, role });
+      const user = new User({
+        organizationId: organization._id,
+        name: name || 'New User',
+        email,
+        passwordHash: password, // Will be hashed by pre-save middleware
+        role: role || 'invoicing_user',
+        isActive: true
+      });
+      
+      await user.save();
       
       // Generate JWT token
       const token = generateToken(user);
@@ -26,10 +45,12 @@ class AuthController {
         message: 'User registered successfully',
         data: {
           user: {
-            id: user.id,
+            id: user._id,
             email: user.email,
             role: user.role,
-            created_at: user.created_at
+            name: user.name,
+            organizationId: user.organizationId,
+            createdAt: user.createdAt
           },
           token
         }
@@ -48,7 +69,7 @@ class AuthController {
       const { email, password } = req.body;
       
       // Find user by email
-      const user = await User.findByEmail(email);
+      const user = await User.findOne({ email, isActive: true });
       if (!user) {
         return res.status(401).json({
           success: false,
@@ -57,7 +78,7 @@ class AuthController {
       }
       
       // Verify password
-      const isPasswordValid = await User.verifyPassword(password, user.password_hash);
+      const isPasswordValid = await user.comparePassword(password);
       if (!isPasswordValid) {
         return res.status(401).json({
           success: false,
@@ -73,10 +94,12 @@ class AuthController {
         message: 'Login successful',
         data: {
           user: {
-            id: user.id,
+            id: user._id,
             email: user.email,
             role: user.role,
-            created_at: user.created_at
+            name: user.name,
+            organizationId: user.organizationId,
+            createdAt: user.createdAt
           },
           token
         }

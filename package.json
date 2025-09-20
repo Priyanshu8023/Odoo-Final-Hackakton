@@ -1,0 +1,32 @@
+{
+  "name": "accounting-system",
+  "version": "1.0.0",
+  "description": "Full-stack accounting and invoicing application",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd Backend && npm run dev",
+    "dev:frontend": "cd Fronted && npm run dev",
+    "install:all": "npm install && cd Backend && npm install && cd ../Fronted && npm install",
+    "build": "cd Backend && npm run build && cd ../Fronted && npm run build",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd Backend && npm start",
+    "start:frontend": "cd Fronted && npm start",
+    "setup": "npm run install:all && npm run setup:env",
+    "setup:env": "node scripts/setup-env.js",
+    "setup-and-run": "node scripts/setup-and-run.js",
+    "test:mongodb": "node scripts/test-mongodb.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "accounting",
+    "invoicing",
+    "react",
+    "nodejs",
+    "postgresql",
+    "fullstack"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

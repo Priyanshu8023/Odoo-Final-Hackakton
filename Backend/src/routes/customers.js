@@ -1,26 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const CustomerController = require('../controllers/customerController');
+const ContactController = require('../controllers/contactController');
 const { authenticate, adminOrInvoicingUser, adminOnly } = require('../middleware/auth');
 const { validate, contactCreateSchema, contactUpdateSchema } = require('../utils/validation');
 
 // All routes require authentication
 router.use(authenticate);
 
-// Create customer - Admin and Invoicing User
-router.post('/', adminOrInvoicingUser, validate(contactCreateSchema), CustomerController.createCustomer);
+// Create contact - Admin and Invoicing User
+router.post('/', adminOrInvoicingUser, validate(contactCreateSchema), ContactController.createContact);
 
-// Get all customers - Admin and Invoicing User
-router.get('/', adminOrInvoicingUser, CustomerController.getAllCustomers);
+// Get all contacts - Admin and Invoicing User
+router.get('/', adminOrInvoicingUser, ContactController.getContacts);
 
-// Get customer by ID - Admin and Invoicing User
-router.get('/:id', adminOrInvoicingUser, CustomerController.getCustomerById);
+// Get contact by ID - Admin and Invoicing User
+router.get('/:id', adminOrInvoicingUser, ContactController.getContactById);
 
-// Update customer - Admin only
-router.put('/:id', adminOnly, validate(contactUpdateSchema), CustomerController.updateCustomer);
+// Update contact - Admin only
+router.put('/:id', adminOnly, validate(contactUpdateSchema), ContactController.updateContact);
 
-// Delete customer - Admin only
-router.delete('/:id', adminOnly, CustomerController.deleteCustomer);
+// Delete contact - Admin only
+router.delete('/:id', adminOnly, ContactController.deleteContact);
 
 module.exports = router;
 

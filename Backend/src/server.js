@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const { connectDB } = require('./config/database');
 require('dotenv').config();
 
 // Import routes
@@ -96,12 +97,30 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-});
+// Connect to MongoDB and start server
+const startServer = async () => {
+  try {
+    console.log('🚀 Starting Accounting System Server...');
+    console.log('=====================================');
+    
+    await connectDB();
+    
+    app.listen(PORT, () => {
+      console.log('=====================================');
+      console.log('✅ Server started successfully!');
+      console.log(`🌐 Server running on port ${PORT}`);
+      console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+      console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
+      console.log('=====================================');
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = app;
 

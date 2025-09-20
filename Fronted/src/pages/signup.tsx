@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface SignupFormData {
   name: string;
-  loginId: string;
   email: string;
   password: string;
   reEnterPassword: string;
@@ -16,7 +17,6 @@ interface SignupFormData {
 
 interface ValidationErrors {
   name?: string;
-  loginId?: string;
   email?: string;
   password?: string;
   reEnterPassword?: string;
@@ -25,7 +25,6 @@ interface ValidationErrors {
 const Signup = () => {
   const [formData, setFormData] = useState<SignupFormData>({
     name: "",
-    loginId: "",
     email: "",
     password: "",
     reEnterPassword: "",
@@ -37,6 +36,8 @@ const Signup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
+  const { register, loading, error } = useAuth();
+  const { toast } = useToast();
 
   const handleInputChange = (field: keyof SignupFormData, value: string) => {
     setFormData(prev => ({
@@ -59,13 +60,8 @@ const Signup = () => {
     // Name validation
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
-    }
-
-    // Login ID validation
-    if (!formData.loginId.trim()) {
-      newErrors.loginId = "Login ID is required";
-    } else if (formData.loginId.length < 6 || formData.loginId.length > 12) {
-      newErrors.loginId = "Login ID must be between 6-12 characters";
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters long";
     }
 
     // Email validation
@@ -108,26 +104,36 @@ const Signup = () => {
 
     setIsSubmitting(true);
     
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+          await register({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: "invoicing_user", // Default role
+          });
       
       // Reset form on success
       setFormData({
         name: "",
-        loginId: "",
         email: "",
         password: "",
         reEnterPassword: "",
       });
       
-      // Show success message and redirect to login
-      alert("Account created successfully! Please login with your credentials.");
-      navigate("/login");
+      toast({
+        title: "Account created successfully",
+        description: "Welcome! You are now logged in.",
+      });
+      
+      navigate("/dashboard");
       
     } catch (error) {
       console.error("Error creating account:", error);
-      alert("Error creating account. Please try again.");
+      toast({
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "Error creating account. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -190,6 +196,7 @@ const Signup = () => {
             <p className="text-center text-blue-100 mt-2">Join ManufactureOps today</p>
           </CardHeader>
           
+<<<<<<< Updated upstream
           <CardContent className="p-6 max-h-[70vh] overflow-y-auto">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name Field */}
@@ -211,35 +218,39 @@ const Signup = () => {
                   </p>
                 )}
               </div>
+=======
+              <CardContent className="p-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Name Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                      Full Name *
+                    </Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      placeholder="Enter your full name"
+                      className={`${errors.name ? "border-red-500 focus:ring-red-500" : ""}`}
+                    />
+                    {errors.name && (
+                      <p className="text-sm text-red-600 flex items-center space-x-1">
+                        <XCircle className="h-4 w-4" />
+                        <span>{errors.name}</span>
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      Enter your first and last name
+                    </p>
+                  </div>
+>>>>>>> Stashed changes
 
-              {/* Login ID Field */}
-              <div className="space-y-2">
-                <Label htmlFor="loginId" className="text-sm font-medium text-gray-700">
-                  Login ID *
-                </Label>
-                <Input
-                  id="loginId"
-                  value={formData.loginId}
-                  onChange={(e) => handleInputChange("loginId", e.target.value)}
-                  placeholder="Enter login ID (6-12 characters)"
-                  className={`${errors.loginId ? "border-red-500 focus:ring-red-500" : ""}`}
-                />
-                {errors.loginId && (
-                  <p className="text-sm text-red-600 flex items-center space-x-1">
-                    <XCircle className="h-4 w-4" />
-                    <span>{errors.loginId}</span>
-                  </p>
-                )}
-                <p className="text-xs text-gray-500">
-                  Must be unique and between 6-12 characters
-                </p>
-              </div>
-
-              {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email ID *
-                </Label>
+                  {/* Email Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                      Email ID *
+                    </Label>
                 <Input
                   id="email"
                   type="email"
