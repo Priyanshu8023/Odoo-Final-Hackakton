@@ -13,6 +13,9 @@ import CreateId from "./pages/createid";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
 import NotFound from "./pages/NotFound";
+import PartnerLedgerPage from "./pages/reports/PartnerLedgerPage";
+import ProfitLossPage from "./pages/reports/ProfitLossPage";
+import BalanceSheetPage from "./pages/reports/BalanceSheetPage";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +35,9 @@ const App = () => (
           <Route path="/product-master" element={<ProductMaster />} />
           <Route path="/taxes-master" element={<TaxMaster />} />
           <Route path="/chart-of-accounts" element={<ChartOfAccounts />} />
+          <Route path="/reports/partner-ledger" element={<PartnerLedgerPage />} />
+          <Route path="/reports/profit-loss" element={<ProfitLossPage />} />
+          <Route path="/reports/balance-sheet" element={<BalanceSheetPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

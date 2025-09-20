@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Menu, Users, Package, Receipt, BookOpen, Home, BarChart3 } from "lucide-react";
+import { X, Menu, Users, Package, Receipt, BookOpen, Home, BarChart3, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +46,30 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           icon: BarChart3,
           path: "/chart-of-accounts",
           description: "Manage accounting structure"
+        }
+      ]
+    },
+    {
+      title: "Reports",
+      icon: FileText,
+      children: [
+        {
+          title: "Partner Ledger",
+          icon: FileText,
+          path: "/reports/partner-ledger",
+          description: "View partner transaction history"
+        },
+        {
+          title: "Profit & Loss Report",
+          icon: FileText,
+          path: "/reports/profit-loss",
+          description: "View profit and loss statements"
+        },
+        {
+          title: "Balance Sheet",
+          icon: FileText,
+          path: "/reports/balance-sheet",
+          description: "View company balance sheet"
         }
       ]
     }
