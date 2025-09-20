@@ -99,14 +99,14 @@ const invoiceSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for better performance
+ 
 invoiceSchema.index({ organizationId: 1 });
 invoiceSchema.index({ organizationId: 1, customerId: 1 });
 invoiceSchema.index({ organizationId: 1, status: 1 });
 invoiceSchema.index({ organizationId: 1, invoiceDate: 1 });
 invoiceSchema.index({ invoiceNumber: 1 });
 
-// Virtual for formatted amounts
+ 
 invoiceSchema.virtual('formattedSubTotal').get(function() {
   return parseFloat(this.subTotal.toString());
 });
