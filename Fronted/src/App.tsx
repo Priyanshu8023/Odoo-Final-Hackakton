@@ -12,6 +12,10 @@ import ContactMaster from "./pages/ContactMaster";
 import ProductMaster from "./pages/ProductMaster";
 import TaxMaster from "./pages/TaxMaster";
 import ChartOfAccounts from "./pages/ChartOfAccounts";
+import PurchaseOrder from "./pages/PurchaseOrder";
+import VendorBill from "./pages/VendorBill";
+import BillPayment from "./pages/BillPayment";
+import Invoices from "./pages/Invoices";
 import CreateId from "./pages/createid";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
@@ -39,7 +43,7 @@ const App = () => {
                   <ProtectedRoute>
                     <Dashboard />
                   </ProtectedRoute>
-                } 
+                }
               />
               <Route 
                 path="/createid" 
@@ -78,6 +82,38 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <ChartOfAccounts />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/purchase-order" 
+                element={
+                  <ProtectedRoute>
+                    <PurchaseOrder />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/vendor-bill" 
+                element={
+                  <ProtectedRoute>
+                    <VendorBill />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/bill-payment" 
+                element={
+                  <ProtectedRoute>
+                    <BillPayment />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/invoices" 
+                element={
+                  <ProtectedRoute>
+                    <Invoices />
                   </ProtectedRoute>
                 } 
               />

@@ -15,5 +15,8 @@ router.get('/invoice-status', adminOrInvoicingUser, ReportController.getInvoiceS
 // Get customer report - Admin and Invoicing User
 router.get('/customers', adminOrInvoicingUser, ReportController.getCustomerReport);
 
+// Get partner ledger - Admin and Invoicing User
+router.get('/partner-ledger', adminOrInvoicingUser, ReportController.getPartnerLedger);
+
 module.exports = router;
 

@@ -505,6 +505,56 @@ class ApiClient {
       body: JSON.stringify({ isArchived: !isActive }),
     });
   }
+
+  // Reports endpoints
+  async getPartnerLedger(params: {
+    partnerId?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+  } = {}) {
+    const queryParams = new URLSearchParams();
+    if (params.partnerId) queryParams.append('partner_id', params.partnerId);
+    if (params.startDate) queryParams.append('start_date', params.startDate);
+    if (params.endDate) queryParams.append('end_date', params.endDate);
+    if (params.search) queryParams.append('search', params.search);
+
+    return this.request<{
+      success: boolean;
+      data: {
+        entries: Array<{
+          id: string;
+          date: string;
+          description: string;
+          reference: string;
+          debit: number;
+          credit: number;
+          balance: number;
+          type: 'invoice' | 'payment' | 'credit_note' | 'debit_note';
+          partner_name: string;
+        }>;
+        summary: {
+          total_debit: number;
+          total_credit: number;
+          current_balance: number;
+        };
+      };
+    }>(`/reports/partner-ledger?${queryParams.toString()}`);
+  }
+
+  async getPartners() {
+    return this.request<{
+      success: boolean;
+      data: {
+        partners: Array<{
+          id: string;
+          name: string;
+          type: string;
+          email?: string;
+        }>;
+      };
+    }>('/customers');
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

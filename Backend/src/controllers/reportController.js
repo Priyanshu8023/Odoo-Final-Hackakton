@@ -212,6 +212,139 @@ class ReportController {
       });
     }
   }
+
+  static async getPartnerLedger(req, res) {
+    try {
+      const { partner_id, start_date, end_date, search } = req.query;
+      
+      let whereClause = '';
+      let params = [];
+      let paramCount = 0;
+      
+      const conditions = [];
+      
+      if (partner_id) {
+        paramCount++;
+        conditions.push(`c.id = $${paramCount}`);
+        params.push(partner_id);
+      }
+      
+      if (start_date && end_date) {
+        paramCount++;
+        conditions.push(`i.issue_date BETWEEN $${paramCount} AND $${paramCount + 1}`);
+        params.push(start_date, end_date);
+        paramCount++;
+      }
+      
+      if (search) {
+        paramCount++;
+        conditions.push(`(i.invoice_number ILIKE $${paramCount} OR c.name ILIKE $${paramCount})`);
+        params.push(`%${search}%`);
+      }
+      
+      if (conditions.length > 0) {
+        whereClause = 'WHERE ' + conditions.join(' AND ');
+      }
+      
+      // Get ledger entries from invoices and payments
+      const query = `
+        WITH ledger_entries AS (
+          -- Invoice entries (debit)
+          SELECT 
+            'invoice_' || i.id as id,
+            i.issue_date as date,
+            'Sales Invoice - ' || i.invoice_number as description,
+            i.invoice_number as reference,
+            i.total_amount as debit,
+            0 as credit,
+            'invoice' as type,
+            c.name as partner_name
+          FROM invoices i
+          JOIN customers c ON i.customer_id = c.id
+          ${whereClause}
+          
+          UNION ALL
+          
+          -- Payment entries (credit) - assuming we have a payments table
+          SELECT 
+            'payment_' || p.id as id,
+            p.payment_date as date,
+            'Payment Received - ' || p.payment_reference as description,
+            p.payment_reference as reference,
+            0 as debit,
+            p.amount as credit,
+            'payment' as type,
+            c.name as partner_name
+          FROM payments p
+          JOIN customers c ON p.customer_id = c.id
+          ${whereClause.replace('i.issue_date', 'p.payment_date').replace('i.invoice_number', 'p.payment_reference')}
+          
+          UNION ALL
+          
+          -- Credit note entries (credit)
+          SELECT 
+            'credit_' || cn.id as id,
+            cn.issue_date as date,
+            'Credit Note - ' || cn.credit_note_number as description,
+            cn.credit_note_number as reference,
+            0 as debit,
+            cn.total_amount as credit,
+            'credit_note' as type,
+            c.name as partner_name
+          FROM credit_notes cn
+          JOIN customers c ON cn.customer_id = c.id
+          ${whereClause.replace('i.issue_date', 'cn.issue_date').replace('i.invoice_number', 'cn.credit_note_number')}
+        )
+        SELECT 
+          id,
+          date,
+          description,
+          reference,
+          debit,
+          credit,
+          type,
+          partner_name,
+          SUM(debit - credit) OVER (ORDER BY date, id) as balance
+        FROM ledger_entries
+        ORDER BY date, id
+      `;
+      
+      const result = await pool.query(query, params);
+      
+      // Calculate summary
+      const totalDebit = result.rows.reduce((sum, row) => sum + parseFloat(row.debit), 0);
+      const totalCredit = result.rows.reduce((sum, row) => sum + parseFloat(row.credit), 0);
+      const currentBalance = totalDebit - totalCredit;
+      
+      res.json({
+        success: true,
+        data: {
+          entries: result.rows.map(row => ({
+            id: row.id,
+            date: row.date,
+            description: row.description,
+            reference: row.reference,
+            debit: parseFloat(row.debit),
+            credit: parseFloat(row.credit),
+            balance: parseFloat(row.balance),
+            type: row.type,
+            partner_name: row.partner_name
+          })),
+          summary: {
+            total_debit: totalDebit,
+            total_credit: totalCredit,
+            current_balance: currentBalance
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Get partner ledger error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get partner ledger'
+      });
+    }
+  }
 }
 
 module.exports = ReportController;

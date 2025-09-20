@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Menu, Users, Package, Receipt, BookOpen, Home, BarChart3 } from "lucide-react";
+import { X, Menu, Users, Package, Receipt, BookOpen, Home, BarChart3, FileText, ShoppingCart, FileText as InvoiceIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +48,24 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           description: "Manage accounting structure"
         }
       ]
+    },
+    {
+      title: "Data Input Forms",
+      icon: FileText,
+      children: [
+        {
+          title: "Purchase Order",
+          icon: ShoppingCart,
+          path: "/purchase-order",
+          description: "Create and manage purchase orders"
+        }
+      ]
+    },
+    {
+      title: "Invoices",
+      icon: InvoiceIcon,
+      path: "/invoices",
+      description: "View and manage all invoices"
     }
   ];
 
@@ -68,11 +86,11 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed top-0 left-0 h-full w-80 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out",
+        "fixed top-0 left-0 h-full w-80 bg-gray-100 shadow-xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">MO</span>
@@ -89,8 +107,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           </Button>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-6 space-y-4">
+        {/* Navigation - Scrollable */}
+        <nav className="flex-1 overflow-y-auto p-6 pb-8 space-y-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500">
           {menuItems.map((item, index) => (
             <div key={index}>
               {item.children ? (
@@ -105,7 +123,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                       <Button
                         key={childIndex}
                         variant="ghost"
-                        className="w-full justify-start h-auto p-3 text-left hover:bg-blue-50 hover:text-blue-700"
+                        className="w-full justify-start h-auto p-3 text-left hover:bg-gray-200 hover:text-gray-900"
                         onClick={() => handleNavigation(child.path)}
                       >
                         <div className="flex items-start space-x-3">
@@ -125,7 +143,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 // Single item
                 <Button
                   variant="ghost"
-                  className="w-full justify-start h-auto p-3 text-left hover:bg-blue-50 hover:text-blue-700"
+                  className="w-full justify-start h-auto p-3 text-left hover:bg-gray-200 hover:text-gray-900"
                   onClick={() => handleNavigation(item.path)}
                 >
                   <div className="flex items-start space-x-3">
@@ -144,7 +162,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t bg-gray-50">
+        <div className="flex-shrink-0 p-6 border-t border-gray-200 bg-gray-200">
           <div className="text-center">
             <p className="text-sm text-gray-600">
               © 2024 ManufactureOps
