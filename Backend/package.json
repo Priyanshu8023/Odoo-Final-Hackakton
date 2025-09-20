@@ -9,7 +9,7 @@
     "migrate": "node src/database/migrate.js",
     "seed": "node src/database/seed.js"
   },
-  "keywords": ["invoicing", "api", "nodejs", "express", "postgresql"],
+  "keywords": ["invoicing", "api", "nodejs", "express", "mongodb"],
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {

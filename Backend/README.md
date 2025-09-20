@@ -1,6 +1,6 @@
 # Comprehensive Accounting Backend API
 
-A complete backend API for a comprehensive accounting and invoicing application built with Node.js, Express.js, and PostgreSQL. This system implements double-entry bookkeeping, inventory management, and advanced business logic.
+A complete backend API for a comprehensive accounting and invoicing application built with Node.js, Express.js, and MongoDB. This system implements double-entry bookkeeping, inventory management, and advanced business logic.
 
 ## Features
 
@@ -99,8 +99,8 @@ A complete backend API for a comprehensive accounting and invoicing application 
    ```
    Update the `.env` file with your database credentials and JWT secret.
 
-3. **Set up PostgreSQL database**:
-   - Create a PostgreSQL database
+3. **Set up MongoDB database**:
+   - Install and start MongoDB on your system
    - Update the database connection details in `.env`
 
 4. **Run database migration**:
@@ -119,29 +119,27 @@ A complete backend API for a comprehensive accounting and invoicing application 
 
 ## Database Schema
 
-The application uses a comprehensive accounting schema with the following main tables:
+The application uses MongoDB with Mongoose ODM for data modeling. The schema includes the following main collections:
 
-### Master Data Tables
+### Master Data Collections
 - `users` - User accounts with roles and contact links
 - `contacts` - Customers and vendors (unified contact management)
 - `products` - Products and services with tax and category links
 - `taxes` - Tax rates and computation methods
-- `product_categories` - Product categorization
-- `chart_of_accounts` - Financial accounts for double-entry bookkeeping
+- `productcategories` - Product categorization
+- `chartofaccounts` - Financial accounts for double-entry bookkeeping
 
-### Transaction Tables
-- `customer_invoices` - Customer invoices with line items
-- `customer_invoice_items` - Invoice line items with tax calculations
-- `vendor_bills` - Vendor bills with line items
-- `vendor_bill_items` - Bill line items with tax calculations
-- `sales_orders` - Sales orders (optional workflow)
-- `purchase_orders` - Purchase orders (optional workflow)
+### Transaction Collections
+- `customerinvoices` - Customer invoices with line items
+- `vendorbills` - Vendor bills with line items
+- `salesorders` - Sales orders (optional workflow)
+- `purchaseorders` - Purchase orders (optional workflow)
 
-### System Tables
-- `journal_entries` - Double-entry bookkeeping headers
-- `ledger_postings` - Debit/credit postings for each transaction
+### System Collections
+- `journalentries` - Double-entry bookkeeping headers
+- `ledgerpostings` - Debit/credit postings for each transaction
 - `payments` - Payment records linked to invoices/bills
-- `stock_movements` - Inventory tracking and movements
+- `inventorymovements` - Inventory tracking and movements
 
 ## Default Admin User
 

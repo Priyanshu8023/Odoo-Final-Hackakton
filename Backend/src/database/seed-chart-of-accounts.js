@@ -144,3 +144,4 @@ const seedChartOfAccounts = async () => {
 };
 
 seedChartOfAccounts();
+

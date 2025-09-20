@@ -10,40 +10,23 @@ import Header from "@/components/layout/Header";
 import { apiClient, ApiError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Contact } from "@/types/contact";
+import { useData } from "@/contexts/DataContext";
 
 const ContactMaster = () => {
   console.log('ContactMaster component rendering...');
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { 
+    contacts, 
+    contactsLoading, 
+    refreshContacts, 
+    createContact: createContactFromContext 
+  } = useData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const { toast } = useToast();
 
-  const fetchContacts = async () => {
-    try {
-      console.log('Fetching contacts...');
-      setLoading(true);
-      const response = await apiClient.getContacts();
-      console.log('Contacts response:', response);
-      if (response.success) {
-        setContacts(response.data.contacts);
-        console.log('Contacts set:', response.data.contacts);
-      }
-    } catch (error) {
-      console.error("Error fetching contacts:", error);
-      toast({
-        title: "Error",
-        description: error instanceof ApiError ? error.message : "Failed to fetch contacts",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchContacts();
-  }, []);
+    refreshContacts();
+  }, [refreshContacts]);
 
   const handleCreateContact = async (contactData: any) => {
     try {
@@ -62,13 +45,8 @@ const ContactMaster = () => {
         profileImageURL: contactData.profileImage || ''
       };
       
-      const response = await apiClient.createContact(backendData);
-      if (response.success) {
-        toast({
-          title: "Success",
-          description: "Contact created successfully",
-        });
-        fetchContacts();
+      const success = await createContactFromContext(backendData);
+      if (success) {
         setIsDialogOpen(false);
       }
     } catch (error) {
@@ -155,7 +133,7 @@ const ContactMaster = () => {
     return "default";
   };
 
-  if (loading) {
+  if (contactsLoading) {
     console.log('ContactMaster loading...');
     return (
       <div className="min-h-screen bg-dashboard-bg">

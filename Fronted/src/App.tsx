@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { DataProvider } from "@/contexts/DataContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -11,10 +12,13 @@ import ContactMaster from "./pages/ContactMaster";
 import ProductMaster from "./pages/ProductMaster";
 import TaxMaster from "./pages/TaxMaster";
 import ChartOfAccounts from "./pages/ChartOfAccounts";
+<<<<<<< HEAD
 import PurchaseOrder from "./pages/PurchaseOrder";
 import VendorBill from "./pages/VendorBill";
 import BillPayment from "./pages/BillPayment";
 import Invoices from "./pages/Invoices";
+=======
+>>>>>>> 60406f704e951c341911405784be2f619f102bfb
 import CreateId from "./pages/createid";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
@@ -27,7 +31,8 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
+        <DataProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -83,6 +88,7 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
+<<<<<<< HEAD
               <Route 
                 path="/purchase-order" 
                 element={
@@ -115,11 +121,14 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
+=======
+>>>>>>> 60406f704e951c341911405784be2f619f102bfb
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </DataProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -99,7 +99,7 @@ PORT=3000
 1. **CORS Errors**: Ensure the backend is running and CORS is properly configured
 2. **Authentication Issues**: Check if JWT tokens are being stored correctly
 3. **API Connection**: Verify the `REACT_APP_API_URL` environment variable
-4. **Database Connection**: Ensure PostgreSQL is running and accessible
+4. **Database Connection**: Ensure MongoDB is running and accessible
 
 ### Debug Tips
 - Check browser console for errors
