@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const TaxController = require('../controllers/taxController');
-const { authenticate, adminOnly } = require('../middleware/auth');
+const { authenticate, adminOnly, adminOrInvoicingUser } = require('../middleware/auth');
 const { validate, taxCreateSchema, taxUpdateSchema } = require('../utils/validation');
 
 // All routes require authentication
 router.use(authenticate);
 
-// Create tax - Admin only
-router.post('/', adminOnly, validate(taxCreateSchema), TaxController.createTax);
+// Create tax - Admin and Invoicing User
+router.post('/', adminOrInvoicingUser, validate(taxCreateSchema), TaxController.createTax);
 
 // Get all taxes - Admin and Invoicing User
 router.get('/', TaxController.getAllTaxes);

@@ -9,21 +9,10 @@ import { ContactFormDialog } from "@/components/contact/ContactFormDialog";
 import Header from "@/components/layout/Header";
 import { apiClient, ApiError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-
-interface Contact {
-  id: number;
-  name: string;
-  type: string;
-  email?: string;
-  mobile?: string;
-  city?: string;
-  state?: string;
-  pincode?: string;
-  profile_image_url?: string;
-  created_at: string;
-}
+import { Contact } from "@/types/contact";
 
 const ContactMaster = () => {
+  console.log('ContactMaster component rendering...');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,10 +21,13 @@ const ContactMaster = () => {
 
   const fetchContacts = async () => {
     try {
+      console.log('Fetching contacts...');
       setLoading(true);
       const response = await apiClient.getContacts();
+      console.log('Contacts response:', response);
       if (response.success) {
-        setContacts(response.data.customers);
+        setContacts(response.data.contacts);
+        console.log('Contacts set:', response.data.contacts);
       }
     } catch (error) {
       console.error("Error fetching contacts:", error);
@@ -55,7 +47,22 @@ const ContactMaster = () => {
 
   const handleCreateContact = async (contactData: any) => {
     try {
-      const response = await apiClient.createContact(contactData);
+      // Transform frontend data to backend format
+      const addressParts = contactData.address?.split(',') || [];
+      const backendData = {
+        name: contactData.name,
+        type: ['customer'], // Default to customer
+        email: contactData.email,
+        mobile: contactData.mobileNo,
+        address: {
+          city: addressParts[0]?.trim() || '',
+          state: addressParts[1]?.trim() || '',
+          pincode: addressParts[2]?.trim() || ''
+        },
+        profileImageURL: contactData.profileImage || ''
+      };
+      
+      const response = await apiClient.createContact(backendData);
       if (response.success) {
         toast({
           title: "Success",
@@ -74,9 +81,24 @@ const ContactMaster = () => {
     }
   };
 
-  const handleUpdateContact = async (id: number, contactData: any) => {
+  const handleUpdateContact = async (id: string, contactData: any) => {
     try {
-      const response = await apiClient.updateContact(id, contactData);
+      // Transform frontend data to backend format
+      const addressParts = contactData.address?.split(',') || [];
+      const backendData = {
+        name: contactData.name,
+        type: ['customer'], // Default to customer
+        email: contactData.email,
+        mobile: contactData.mobileNo,
+        address: {
+          city: addressParts[0]?.trim() || '',
+          state: addressParts[1]?.trim() || '',
+          pincode: addressParts[2]?.trim() || ''
+        },
+        profileImageURL: contactData.profileImage || ''
+      };
+      
+      const response = await apiClient.updateContact(id, backendData);
       if (response.success) {
         toast({
           title: "Success",
@@ -95,7 +117,7 @@ const ContactMaster = () => {
     }
   };
 
-  const handleDeleteContact = async (id: number) => {
+  const handleDeleteContact = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this contact?")) {
       try {
         const response = await apiClient.deleteContact(id);
@@ -127,20 +149,14 @@ const ContactMaster = () => {
     setIsDialogOpen(true);
   };
 
-  const getTypeBadgeVariant = (type: string) => {
-    switch (type) {
-      case "Customer":
-        return "default";
-      case "Vendor":
-        return "secondary";
-      case "Both":
-        return "outline";
-      default:
-        return "default";
-    }
+  const getTypeBadgeVariant = (types: string[]) => {
+    if (types.includes("Both")) return "outline";
+    if (types.includes("Vendor")) return "secondary";
+    return "default";
   };
 
   if (loading) {
+    console.log('ContactMaster loading...');
     return (
       <div className="min-h-screen bg-dashboard-bg">
         <Header title="Contact Master" />
@@ -150,6 +166,8 @@ const ContactMaster = () => {
       </div>
     );
   }
+
+  console.log('ContactMaster rendering with contacts:', contacts);
 
   return (
     <div className="min-h-screen bg-dashboard-bg">
@@ -183,11 +201,11 @@ const ContactMaster = () => {
                 </TableHeader>
                 <TableBody>
                   {contacts.map((contact) => (
-                    <TableRow key={contact.id}>
+                    <TableRow key={contact._id}>
                         <TableCell>
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={contact.profile_image_url} />
+                            <AvatarImage src={contact.profileImageURL} />
                             <AvatarFallback>
                               {contact.name.charAt(0).toUpperCase()}
                             </AvatarFallback>
@@ -197,14 +215,14 @@ const ContactMaster = () => {
                         </TableCell>
                       <TableCell>
                         <Badge variant={getTypeBadgeVariant(contact.type)}>
-                          {contact.type}
+                          {contact.type.join(', ')}
                         </Badge>
                         </TableCell>
                       <TableCell>{contact.email || "-"}</TableCell>
                       <TableCell>{contact.mobile || "-"}</TableCell>
                       <TableCell>
-                        {contact.city && contact.state 
-                          ? `${contact.city}, ${contact.state}` 
+                        {contact.address?.city && contact.address?.state 
+                          ? `${contact.address.city}, ${contact.address.state}` 
                           : "-"
                         }
                         </TableCell>
@@ -220,7 +238,7 @@ const ContactMaster = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteContact(contact.id)}
+                              onClick={() => handleDeleteContact(contact._id)}
                             className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="h-4 w-4" />

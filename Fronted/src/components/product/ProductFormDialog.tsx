@@ -11,8 +11,8 @@ import { Product, ProductFormData } from "@/types/product";
 interface ProductFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: ProductFormData) => void;
-  product?: Product | null;
+  onSubmit: (data: ProductFormData) => void;
+  initialData?: any;
   isViewMode?: boolean;
 }
 
@@ -53,8 +53,8 @@ const typeOptions = [
 export const ProductFormDialog = ({
   isOpen,
   onClose,
-  onSave,
-  product,
+  onSubmit,
+  initialData,
   isViewMode = false,
 }: ProductFormDialogProps) => {
   const [formData, setFormData] = useState<ProductFormData>({
@@ -71,18 +71,18 @@ export const ProductFormDialog = ({
   });
 
   useEffect(() => {
-    if (product) {
+    if (initialData) {
       setFormData({
-        productName: product.productName,
-        hsnCode: product.hsnCode,
-        unit: product.unit,
-        purchasePrice: product.purchasePrice,
-        salesPrice: product.salesPrice,
-        gstPercentage: product.gstPercentage,
-        description: product.description || "",
-        category: product.category || "",
-        type: product.type || "",
-        code: product.code || "",
+        productName: initialData.name || "",
+        hsnCode: initialData.hsn_code || "",
+        unit: "KG", // Default unit
+        purchasePrice: initialData.purchase_price || 0,
+        salesPrice: initialData.sales_price || 0,
+        gstPercentage: 0, // Default GST
+        description: "",
+        category: initialData.category_name || "",
+        type: initialData.type === 'goods' ? 'Raw Material' : 'Service',
+        code: "",
       });
     } else {
       setFormData({
@@ -98,7 +98,7 @@ export const ProductFormDialog = ({
         code: "",
       });
     }
-  }, [product, isOpen]);
+  }, [initialData, isOpen]);
 
   const handleInputChange = (field: keyof ProductFormData, value: string | number) => {
     setFormData(prev => ({
@@ -109,7 +109,8 @@ export const ProductFormDialog = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    console.log("ProductFormDialog: handleSubmit called with formData:", formData);
+    onSubmit(formData);
   };
 
   const handleClose = () => {
@@ -136,7 +137,7 @@ export const ProductFormDialog = ({
             <span>
               {isViewMode 
                 ? "View Product Details" 
-                : product 
+                : initialData 
                   ? "Edit Product" 
                   : "Add New Product"
               }
@@ -321,7 +322,7 @@ export const ProductFormDialog = ({
                 Cancel
               </Button>
               <Button type="submit">
-                {product ? "Update Product" : "Save Product"}
+                {initialData ? "Update Product" : "Save Product"}
               </Button>
             </div>
           )}

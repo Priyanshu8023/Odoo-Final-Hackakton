@@ -13,11 +13,6 @@ interface HeaderProps {
 
 const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // This would come from auth context in real app
-  const [userInfo, setUserInfo] = useState({
-    loginId: "admin_user",
-    profilePic: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-  });
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -30,11 +25,7 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
   };
 
   const handleLogout = () => {
-<<<<<<< Updated upstream
-    setIsLoggedIn(false);
-=======
     logout();
->>>>>>> Stashed changes
     navigate("/");
   };
 
@@ -58,27 +49,6 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
               <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
             </div>
 
-<<<<<<< Updated upstream
-            {/* Right side - User profile or Login/Signup buttons */}
-            <div className="flex items-center space-x-3">
-              {isLoggedIn ? (
-                // User is logged in - show profile
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-full border border-blue-200">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={userInfo.profilePic} alt={userInfo.loginId} />
-                      <AvatarFallback>
-                        <User className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium text-gray-700">{userInfo.loginId}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleLogout}
-                    className="flex items-center space-x-2 text-gray-600 hover:text-red-600"
-=======
             {/* Right side - User info and actions */}
             <div className="flex items-center space-x-3">
               {user ? (
@@ -95,25 +65,10 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
                     size="sm"
                     onClick={handleLogout}
                     className="flex items-center space-x-2"
->>>>>>> Stashed changes
                   >
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
                   </Button>
-<<<<<<< Updated upstream
-                </div>
-              ) : (
-                // User is not logged in - show login/signup button only
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate("/login")}
-                  className="flex items-center space-x-2"
-                >
-                  <User className="h-4 w-4" />
-                  <span>Login/Signup</span>
-                </Button>
-=======
                 </>
               ) : (
                 <>
@@ -136,7 +91,6 @@ const Header = ({ title = "Shiv Accounts", showMenu = true }: HeaderProps) => {
                     <span>Sign Up</span>
                   </Button>
                 </>
->>>>>>> Stashed changes
               )}
             </div>
           </div>

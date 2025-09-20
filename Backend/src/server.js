@@ -13,6 +13,7 @@ const productRoutes = require('./routes/products');
 const invoiceRoutes = require('./routes/invoices');
 const reportRoutes = require('./routes/reports');
 const taxRoutes = require('./routes/taxes');
+const chartOfAccountRoutes = require('./routes/chartOfAccounts');
 const productCategoryRoutes = require('./routes/productCategories');
 
 const app = express();
@@ -61,6 +62,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/taxes', taxRoutes);
+app.use('/api/chart-of-accounts', chartOfAccountRoutes);
 app.use('/api/product-categories', productCategoryRoutes);
 
 // 404 handler

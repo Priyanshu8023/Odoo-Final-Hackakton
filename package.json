@@ -14,7 +14,12 @@
     "setup": "npm run install:all && npm run setup:env",
     "setup:env": "node scripts/setup-env.js",
     "setup-and-run": "node scripts/setup-and-run.js",
-    "test:mongodb": "node scripts/test-mongodb.js"
+    "start-servers": "node scripts/start-servers.js",
+    "start-both": "node scripts/start-both.js",
+    "run-app": "node scripts/run-app.js",
+    "show-urls": "node scripts/show-urls.js",
+    "test:mongodb": "node scripts/test-mongodb.js",
+    "check:mongodb": "node scripts/check-mongodb.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

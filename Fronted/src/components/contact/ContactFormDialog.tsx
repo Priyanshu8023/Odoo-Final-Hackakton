@@ -11,16 +11,16 @@ import { Contact, ContactFormData } from "@/types/contact";
 interface ContactFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: ContactFormData) => void;
-  contact?: Contact | null;
+  onSubmit: (data: ContactFormData) => void;
+  initialData?: any;
   isViewMode?: boolean;
 }
 
 export const ContactFormDialog = ({
   isOpen,
   onClose,
-  onSave,
-  contact,
+  onSubmit,
+  initialData,
   isViewMode = false,
 }: ContactFormDialogProps) => {
   const [formData, setFormData] = useState<ContactFormData>({
@@ -37,18 +37,19 @@ export const ContactFormDialog = ({
   });
 
   useEffect(() => {
-    if (contact) {
+    if (initialData) {
       setFormData({
-        name: contact.name,
-        email: contact.email,
-        mobileNo: contact.mobileNo,
-        address: contact.address,
-        gstNo: contact.gstNo || "",
-        panNo: contact.panNo || "",
-        bankName: contact.bankName || "",
-        accountNo: contact.accountNo || "",
-        ifscCode: contact.ifscCode || "",
-        profileImage: contact.profileImage || "",
+        name: initialData.name || "",
+        email: initialData.email || "",
+        mobileNo: initialData.mobile || "",
+        address: initialData.address ? 
+          `${initialData.address.city || ''}, ${initialData.address.state || ''}, ${initialData.address.pincode || ''}`.replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '') : "",
+        gstNo: "",
+        panNo: "",
+        bankName: "",
+        accountNo: "",
+        ifscCode: "",
+        profileImage: initialData.profileImageURL || "",
       });
     } else {
       setFormData({
@@ -64,7 +65,7 @@ export const ContactFormDialog = ({
         profileImage: "",
       });
     }
-  }, [contact, isOpen]);
+  }, [initialData, isOpen]);
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
     setFormData(prev => ({
@@ -75,7 +76,7 @@ export const ContactFormDialog = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSubmit(formData);
   };
 
   const handleClose = () => {
@@ -102,7 +103,7 @@ export const ContactFormDialog = ({
             <span>
               {isViewMode 
                 ? "View Contact Details" 
-                : contact 
+                : initialData 
                   ? "Edit Contact" 
                   : "Add New Contact"
               }
@@ -258,7 +259,7 @@ export const ContactFormDialog = ({
                 Cancel
               </Button>
               <Button type="submit">
-                {contact ? "Update Contact" : "Save Contact"}
+                {initialData ? "Update Contact" : "Save Contact"}
               </Button>
             </div>
           )}

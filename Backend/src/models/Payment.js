@@ -71,3 +71,4 @@ paymentSchema.virtual('formattedAmount').get(function() {
 });
 
 module.exports = mongoose.model('Payment', paymentSchema);
+

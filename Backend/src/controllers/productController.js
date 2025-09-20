@@ -3,17 +3,19 @@ const Product = require('../models/Product');
 class ProductController {
   static async createProduct(req, res) {
     try {
-      const { name, type, sales_price, purchase_price, hsn_code, category_id, sale_tax_id, purchase_tax_id } = req.body;
+      const { name, type, salesPrice, purchasePrice, hsnCode, category, saleTaxId, purchaseTaxId } = req.body;
+      const organizationId = req.user.organizationId;
       
       const product = await Product.create({
+        organizationId,
         name,
         type,
-        sales_price,
-        purchase_price,
-        hsn_code,
-        category_id,
-        sale_tax_id,
-        purchase_tax_id
+        salesPrice,
+        purchasePrice,
+        hsnCode,
+        category,
+        saleTaxId,
+        purchaseTaxId
       });
       
       res.status(201).json({
@@ -32,11 +34,24 @@ class ProductController {
   
   static async getAllProducts(req, res) {
     try {
-      const products = await Product.getAll();
+      const organizationId = req.user.organizationId;
+      const products = await Product.getAll(organizationId);
+      
+      // Transform products to match frontend expectations
+      const transformedProducts = products.map(product => ({
+        id: product._id,
+        name: product.name,
+        type: product.type,
+        sales_price: parseFloat(product.salesPrice.toString()),
+        purchase_price: parseFloat(product.purchasePrice.toString()),
+        hsn_code: product.hsnCode,
+        category_name: product.category,
+        created_at: product.createdAt
+      }));
       
       res.json({
         success: true,
-        data: { products }
+        data: { products: transformedProducts }
       });
     } catch (error) {
       console.error('Get products error:', error);
@@ -50,8 +65,9 @@ class ProductController {
   static async getProductById(req, res) {
     try {
       const { id } = req.params;
+      const organizationId = req.user.organizationId;
       
-      const product = await Product.getById(id);
+      const product = await Product.getById(id, organizationId);
       if (!product) {
         return res.status(404).json({
           success: false,
@@ -75,10 +91,11 @@ class ProductController {
   static async updateProduct(req, res) {
     try {
       const { id } = req.params;
-      const { name, type, sales_price, purchase_price, hsn_code, category_id, sale_tax_id, purchase_tax_id } = req.body;
+      const { name, type, salesPrice, purchasePrice, hsnCode, category, saleTaxId, purchaseTaxId } = req.body;
+      const organizationId = req.user.organizationId;
       
       // Check if product exists
-      const existingProduct = await Product.getById(id);
+      const existingProduct = await Product.getById(id, organizationId);
       if (!existingProduct) {
         return res.status(404).json({
           success: false,
@@ -89,13 +106,13 @@ class ProductController {
       const product = await Product.update(id, {
         name,
         type,
-        sales_price,
-        purchase_price,
-        hsn_code,
-        category_id,
-        sale_tax_id,
-        purchase_tax_id
-      });
+        salesPrice,
+        purchasePrice,
+        hsnCode,
+        category,
+        saleTaxId,
+        purchaseTaxId
+      }, organizationId);
       
       res.json({
         success: true,
@@ -114,9 +131,10 @@ class ProductController {
   static async deleteProduct(req, res) {
     try {
       const { id } = req.params;
+      const organizationId = req.user.organizationId;
       
       // Check if product exists
-      const existingProduct = await Product.getById(id);
+      const existingProduct = await Product.getById(id, organizationId);
       if (!existingProduct) {
         return res.status(404).json({
           success: false,
@@ -124,7 +142,7 @@ class ProductController {
         });
       }
       
-      const product = await Product.delete(id);
+      const product = await Product.delete(id, organizationId);
       
       res.json({
         success: true,

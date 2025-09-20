@@ -20,18 +20,34 @@ function log(message, color = 'reset') {
 
 function checkMongoDB() {
   return new Promise((resolve) => {
-    exec('mongod --version', (error) => {
-      if (error) {
-        log('❌ MongoDB is not installed or not in PATH', 'red');
-        log('Please install MongoDB: https://www.mongodb.com/try/download/community', 'yellow');
-        log('Or start MongoDB service: net start MongoDB (Windows)', 'yellow');
-        resolve(false);
-      } else {
-        log('✅ MongoDB is installed', 'green');
-        log('🔍 Checking MongoDB connection...', 'blue');
-        resolve(true);
+    // Try multiple ways to check MongoDB
+    const commands = ['mongod --version', 'mongo --version', 'mongosh --version'];
+    let completed = false;
+    
+    const tryNext = (index) => {
+      if (index >= commands.length) {
+        if (!completed) {
+          log('⚠️  MongoDB version check failed, but continuing...', 'yellow');
+          log('💡 If MongoDB is running, the connection will be tested during startup', 'blue');
+          completed = true;
+          resolve(true);
+        }
+        return;
       }
-    });
+      
+      exec(commands[index], (error) => {
+        if (!error && !completed) {
+          log('✅ MongoDB is installed', 'green');
+          log('🔍 Checking MongoDB connection...', 'blue');
+          completed = true;
+          resolve(true);
+        } else {
+          tryNext(index + 1);
+        }
+      });
+    };
+    
+    tryNext(0);
   });
 }
 
@@ -123,6 +139,9 @@ function startServers() {
     if (output.includes('Ready to accept database operations')) {
       log('🎉 Database operations ready!', 'green');
     }
+    if (output.includes('API Base URL')) {
+      log('📡 Backend API is ready!', 'green');
+    }
   });
   
   backend.stderr.on('data', (data) => {
@@ -137,7 +156,12 @@ function startServers() {
     const output = data.toString();
     if (output.includes('Local:')) {
       log('✅ Frontend server started successfully', 'green');
+    }
+    if (output.includes('http://localhost:5173')) {
       log('🌐 Frontend: http://localhost:5173', 'blue');
+    }
+    if (output.includes('ready in')) {
+      log('🎉 Frontend is ready!', 'green');
     }
   });
   
@@ -166,9 +190,13 @@ function startServers() {
 async function main() {
   try {
     // Check MongoDB
-    const mongoInstalled = await checkMongoDB();
-    if (!mongoInstalled) {
-      process.exit(1);
+    log('🔍 Checking MongoDB connection...', 'blue');
+    try {
+      await runCommand('node scripts/check-mongodb.js', path.join(__dirname, '..'));
+      log('✅ MongoDB connection verified', 'green');
+    } catch (error) {
+      log('⚠️  MongoDB check failed, but continuing...', 'yellow');
+      log('💡 The connection will be tested during server startup', 'blue');
     }
     
     // Check if dependencies are installed
@@ -191,14 +219,15 @@ async function main() {
     startServers();
     
     log('\n🎉 Setup complete! Both servers are starting...', 'green');
-    log('📋 Available URLs:', 'blue');
-    log('  - Frontend: http://localhost:5173', 'blue');
-    log('  - Backend API: http://localhost:3000/api', 'blue');
-    log('  - Health Check: http://localhost:3000/health', 'blue');
-    log('\n🔑 Default Admin Login:', 'blue');
-    log('  - Email: admin@invoicing.com', 'blue');
-    log('  - Password: admin123', 'blue');
-    log('\nPress Ctrl+C to stop both servers', 'yellow');
+    
+    // Display URLs after a short delay
+    setTimeout(() => {
+      log('\n', 'reset');
+      log('🌐 Frontend URL: http://localhost:5173/', 'blue');
+      log('🛠 API URL: http://localhost:3000/api', 'blue');
+      log('❤️ Health Check: http://localhost:3000/health', 'blue');
+      log('', 'reset');
+    }, 3000);
     
   } catch (error) {
     log(`❌ Setup failed: ${error.message}`, 'red');

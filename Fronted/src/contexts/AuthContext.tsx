@@ -51,9 +51,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (storedToken) {
       setToken(storedToken);
       apiClient.setToken(storedToken);
-      // You might want to verify the token with the backend here
+      // Set user data for development
+      setUser({
+        id: '68cea79a37fb4cf22fefbedb',
+        email: 'test@example.com',
+        role: 'invoicing_user',
+        name: 'Test User',
+        organizationId: '68ce8a3cc61c753c8a03080d',
+        createdAt: new Date().toISOString()
+      });
       setLoading(false);
     } else {
+      // Development mode: Auto-login with test user
+      const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4Y2VhNzlhMzdmYjRjZjIyZmVmYmVkYiIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGUiOiJpbnZvaWNpbmdfdXNlciIsIm9yZ2FuaXphdGlvbklkIjoiNjhjZThhM2NjNjFjNzUzYzhhMDMwODBkIiwiaWF0IjoxNzU4MzczNzg2LCJleHAiOjE3NTg0NjAxODZ9.P-OvZ1vaZtaed6hgAp8YzxwEJPJiwPkqj51gKtDKsoE';
+      setToken(testToken);
+      apiClient.setToken(testToken);
+      setUser({
+        id: '68cea79a37fb4cf22fefbedb',
+        email: 'test@example.com',
+        role: 'invoicing_user',
+        name: 'Test User',
+        organizationId: '68ce8a3cc61c753c8a03080d',
+        createdAt: new Date().toISOString()
+      });
       setLoading(false);
     }
   }, []);

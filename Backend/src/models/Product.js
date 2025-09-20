@@ -68,4 +68,34 @@ productSchema.virtual('formattedPurchasePrice').get(function() {
   return parseFloat(this.purchasePrice.toString());
 });
 
+// Static methods for the controller
+productSchema.statics.create = async function(data) {
+  const product = new this(data);
+  return await product.save();
+};
+
+productSchema.statics.getAll = async function(organizationId) {
+  return await this.find({ organizationId, isArchived: false });
+};
+
+productSchema.statics.getById = async function(id, organizationId) {
+  return await this.findOne({ _id: id, organizationId, isArchived: false });
+};
+
+productSchema.statics.update = async function(id, data, organizationId) {
+  return await this.findOneAndUpdate(
+    { _id: id, organizationId, isArchived: false }, 
+    data, 
+    { new: true }
+  );
+};
+
+productSchema.statics.delete = async function(id, organizationId) {
+  return await this.findOneAndUpdate(
+    { _id: id, organizationId, isArchived: false }, 
+    { isArchived: true }, 
+    { new: true }
+  );
+};
+
 module.exports = mongoose.model('Product', productSchema);

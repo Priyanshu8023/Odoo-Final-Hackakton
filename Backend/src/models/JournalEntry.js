@@ -76,3 +76,4 @@ journalEntrySchema.pre('save', function(next) {
 });
 
 module.exports = mongoose.model('JournalEntry', journalEntrySchema);
+

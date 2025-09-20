@@ -43,24 +43,24 @@ const contactUpdateSchema = Joi.object({
 // Product validation schemas
 const productCreateSchema = Joi.object({
   name: Joi.string().min(1).max(255).required(),
-  type: Joi.string().valid('Goods', 'Service').required(),
-  sales_price: Joi.number().positive().precision(2).required(),
-  purchase_price: Joi.number().positive().precision(2).required(),
-  hsn_code: Joi.string().max(50).allow('', null),
-  category_id: Joi.number().integer().positive().allow(null),
-  sale_tax_id: Joi.number().integer().positive().allow(null),
-  purchase_tax_id: Joi.number().integer().positive().allow(null)
+  type: Joi.string().valid('goods', 'service').required(),
+  salesPrice: Joi.number().positive().precision(2).required(),
+  purchasePrice: Joi.number().positive().precision(2).required(),
+  hsnCode: Joi.string().max(50).allow('', null),
+  category: Joi.string().max(255).allow('', null),
+  saleTaxId: Joi.string().allow(null),
+  purchaseTaxId: Joi.string().allow(null)
 });
 
 const productUpdateSchema = Joi.object({
   name: Joi.string().min(1).max(255),
-  type: Joi.string().valid('Goods', 'Service'),
-  sales_price: Joi.number().positive().precision(2),
-  purchase_price: Joi.number().positive().precision(2),
-  hsn_code: Joi.string().max(50).allow('', null),
-  category_id: Joi.number().integer().positive().allow(null),
-  sale_tax_id: Joi.number().integer().positive().allow(null),
-  purchase_tax_id: Joi.number().integer().positive().allow(null)
+  type: Joi.string().valid('goods', 'service'),
+  salesPrice: Joi.number().positive().precision(2),
+  purchasePrice: Joi.number().positive().precision(2),
+  hsnCode: Joi.string().max(50).allow('', null),
+  category: Joi.string().max(255).allow('', null),
+  saleTaxId: Joi.string().allow(null),
+  purchaseTaxId: Joi.string().allow(null)
 });
 
 // Invoice validation schemas
@@ -99,16 +99,29 @@ const invoiceUpdateSchema = Joi.object({
 // Tax validation schemas
 const taxCreateSchema = Joi.object({
   tax_name: Joi.string().min(1).max(100).required(),
-  computation_method: Joi.string().valid('Percentage', 'Fixed').required(),
+  computation_method: Joi.string().valid('percentage', 'fixed').required(),
   rate: Joi.number().min(0).precision(2).required(),
-  applicable_on: Joi.string().valid('Sales', 'Purchase', 'Both').required()
+  applicable_on: Joi.string().valid('sales', 'purchase', 'both').required()
 });
 
 const taxUpdateSchema = Joi.object({
   tax_name: Joi.string().min(1).max(100),
-  computation_method: Joi.string().valid('Percentage', 'Fixed'),
+  computation_method: Joi.string().valid('percentage', 'fixed'),
   rate: Joi.number().min(0).precision(2),
-  applicable_on: Joi.string().valid('Sales', 'Purchase', 'Both')
+  applicable_on: Joi.string().valid('sales', 'purchase', 'both')
+});
+
+// Chart of Accounts validation schemas
+const chartOfAccountCreateSchema = Joi.object({
+  account_name: Joi.string().min(1).max(255).required(),
+  account_type: Joi.string().valid('asset', 'liability', 'income', 'expense', 'equity').required(),
+  description: Joi.string().max(500).optional()
+});
+
+const chartOfAccountUpdateSchema = Joi.object({
+  account_name: Joi.string().min(1).max(255),
+  account_type: Joi.string().valid('asset', 'liability', 'income', 'expense', 'equity'),
+  description: Joi.string().max(500).optional()
 });
 
 // Product Category validation schemas
@@ -120,18 +133,6 @@ const productCategoryUpdateSchema = Joi.object({
   name: Joi.string().min(1).max(255)
 });
 
-// Chart of Account validation schemas
-const chartOfAccountCreateSchema = Joi.object({
-  account_name: Joi.string().min(1).max(255).required(),
-  account_type: Joi.string().valid('Asset', 'Liability', 'Income', 'Expense', 'Equity').required(),
-  description: Joi.string().allow('', null)
-});
-
-const chartOfAccountUpdateSchema = Joi.object({
-  account_name: Joi.string().min(1).max(255),
-  account_type: Joi.string().valid('Asset', 'Liability', 'Income', 'Expense', 'Equity'),
-  description: Joi.string().allow('', null)
-});
 
 // Validation middleware factory
 const validate = (schema) => {

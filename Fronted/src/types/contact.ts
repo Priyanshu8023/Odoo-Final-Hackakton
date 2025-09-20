@@ -1,17 +1,17 @@
 export interface Contact {
-  id: string;
+  _id: string;
   name: string;
-  email: string;
-  mobileNo: string;
-  address: string;
-  gstNo?: string;
-  panNo?: string;
-  bankName?: string;
-  accountNo?: string;
-  ifscCode?: string;
-  profileImage?: string; // Base64 string or URL
-  createdAt: Date;
-  updatedAt: Date;
+  type: string[];
+  email?: string;
+  mobile?: string;
+  address?: {
+    city?: string;
+    state?: string;
+    pincode?: string;
+  };
+  profileImageURL?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ContactFormData {

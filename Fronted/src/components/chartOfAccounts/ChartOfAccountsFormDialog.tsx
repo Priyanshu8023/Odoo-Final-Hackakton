@@ -7,15 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ChartOfAccount, ChartOfAccountFormData, ACCOUNT_TYPES } from "@/types/chartOfAccounts";
 
 interface ChartOfAccountsFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: ChartOfAccountFormData) => void;
-  account?: ChartOfAccount | null;
+  onSave: (data: any) => void;
+  account?: any;
   isViewMode?: boolean;
-  existingAccounts: ChartOfAccount[];
+  existingAccounts: any[];
 }
 
 export const ChartOfAccountsFormDialog = ({
@@ -26,38 +25,29 @@ export const ChartOfAccountsFormDialog = ({
   isViewMode = false,
   existingAccounts,
 }: ChartOfAccountsFormDialogProps) => {
-  const [formData, setFormData] = useState<ChartOfAccountFormData>({
-    accountName: "",
-    accountCode: "",
-    accountType: "Assets",
-    parentId: "",
+  const [formData, setFormData] = useState({
+    account_name: "",
+    account_type: "asset",
     description: "",
-    isActive: true,
   });
 
   useEffect(() => {
     if (account) {
       setFormData({
-        accountName: account.accountName,
-        accountCode: account.accountCode,
-        accountType: account.accountType,
-        parentId: account.parentId || "",
+        account_name: account.account_name || "",
+        account_type: account.account_type || "asset",
         description: account.description || "",
-        isActive: account.isActive,
       });
     } else {
       setFormData({
-        accountName: "",
-        accountCode: "",
-        accountType: "Assets",
-        parentId: "",
+        account_name: "",
+        account_type: "asset",
         description: "",
-        isActive: true,
       });
     }
   }, [account, isOpen]);
 
-  const handleInputChange = (field: keyof ChartOfAccountFormData, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -81,35 +71,7 @@ export const ChartOfAccountsFormDialog = ({
     onClose();
   };
 
-  const getAccountTypeInfo = (type: string) => {
-    return ACCOUNT_TYPES.find(t => t.type === type) || ACCOUNT_TYPES[0];
-  };
 
-  const getParentAccountOptions = () => {
-    return existingAccounts.filter(acc => 
-      acc.accountType === formData.accountType && 
-      acc.id !== account?.id &&
-      !acc.parentId // Only show top-level accounts as parents
-    );
-  };
-
-  const generateAccountCode = () => {
-    const accountsOfType = existingAccounts.filter(acc => acc.accountType === formData.accountType);
-    const maxCode = Math.max(...accountsOfType.map(acc => parseInt(acc.accountCode) || 0));
-    const nextCode = maxCode + 100;
-    return nextCode.toString().padStart(4, '0');
-  };
-
-  const handleAccountTypeChange = (newType: string) => {
-    setFormData(prev => ({
-      ...prev,
-      accountType: newType as any,
-      parentId: "", // Reset parent when type changes
-      accountCode: generateAccountCode(),
-    }));
-  };
-
-  const typeInfo = getAccountTypeInfo(formData.accountType);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -143,9 +105,9 @@ export const ChartOfAccountsFormDialog = ({
               <div className="space-y-2">
                 <Label htmlFor="accountName">Account Name *</Label>
                 <Input
-                  id="accountName"
-                  value={formData.accountName}
-                  onChange={(e) => handleInputChange("accountName", e.target.value)}
+                  id="account_name"
+                  value={formData.account_name}
+                  onChange={(e) => handleInputChange("account_name", e.target.value)}
                   placeholder="e.g., Cash, Bank, Sales"
                   required
                   disabled={isViewMode}
@@ -178,52 +140,25 @@ export const ChartOfAccountsFormDialog = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="accountType">Account Type *</Label>
+              <Label htmlFor="account_type">Account Type *</Label>
               <Select
-                value={formData.accountType}
-                onValueChange={handleAccountTypeChange}
+                value={formData.account_type}
+                onValueChange={(value) => handleInputChange("account_type", value)}
                 disabled={isViewMode}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select account type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ACCOUNT_TYPES.map((type) => (
-                    <SelectItem key={type.type} value={type.type}>
-                      <div className="flex items-center space-x-2">
-                        <span>{type.label}</span>
-                        <span className="text-xs text-gray-500">({type.normalBalance})</span>
-                      </div>
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="asset">Asset</SelectItem>
+                  <SelectItem value="liability">Liability</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="equity">Equity</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500">
-                {typeInfo.description} - Normal balance: {typeInfo.normalBalance}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="parentId">Parent Account</Label>
-              <Select
-                value={formData.parentId}
-                onValueChange={(value) => handleInputChange("parentId", value)}
-                disabled={isViewMode}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select parent account (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No Parent (Top Level)</SelectItem>
-                  {getParentAccountOptions().map((parent) => (
-                    <SelectItem key={parent.id} value={parent.id}>
-                      {parent.accountName} ({parent.accountCode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500">
-                Select a parent account to create a sub-account. Leave empty for top-level accounts.
+                Select the type of account for proper categorization
               </p>
             </div>
 
@@ -240,66 +175,23 @@ export const ChartOfAccountsFormDialog = ({
             </div>
           </div>
 
-          {/* Account Status */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Account Status</h3>
-            <div className="flex items-center space-x-3">
-              <Switch
-                checked={formData.isActive}
-                onCheckedChange={(checked) => handleInputChange("isActive", checked)}
-                disabled={isViewMode}
-                className="data-[state=checked]:bg-green-600"
-              />
-              <div>
-                <Label htmlFor="isActive" className="text-sm font-medium">
-                  {formData.isActive ? 'Active' : 'Inactive'}
-                </Label>
-                <p className="text-xs text-gray-500">
-                  {formData.isActive 
-                    ? 'This account will be available for use in transactions' 
-                    : 'This account will be hidden and unavailable for new transactions'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Account Preview */}
-          {formData.accountName && formData.accountCode && (
+          {formData.account_name && formData.account_type && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Account Preview</h3>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium">Account Name:</span>
-                    <p className="text-gray-600">{formData.accountName}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Code:</span>
-                    <p className="text-gray-600 font-mono">{formData.accountCode}</p>
+                    <p className="text-gray-600">{formData.account_name}</p>
                   </div>
                   <div>
                     <span className="font-medium">Type:</span>
-                    <p className="text-gray-600">{formData.accountType}</p>
+                    <p className="text-gray-600 capitalize">{formData.account_type}</p>
                   </div>
                   <div>
-                    <span className="font-medium">Normal Balance:</span>
-                    <p className="text-gray-600">{typeInfo.normalBalance}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Parent:</span>
-                    <p className="text-gray-600">
-                      {formData.parentId 
-                        ? existingAccounts.find(acc => acc.id === formData.parentId)?.accountName || 'Unknown'
-                        : 'Top Level'
-                      }
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Status:</span>
-                    <p className={`${formData.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                      {formData.isActive ? 'Active' : 'Inactive'}
-                    </p>
+                    <span className="font-medium">Description:</span>
+                    <p className="text-gray-600">{formData.description || 'No description'}</p>
                   </div>
                 </div>
               </div>

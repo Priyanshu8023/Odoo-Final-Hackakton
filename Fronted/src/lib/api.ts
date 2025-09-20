@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 class ApiError extends Error {
   constructor(
@@ -166,12 +166,12 @@ class ApiClient {
     });
   }
 
-  async updateContact(id: number, contactData: any) {
+  async updateContact(id: string, contactData: any) {
     return this.request<{
       success: boolean;
       message: string;
       data: {
-        customer: any;
+        contact: any;
       };
     }>(`/customers/${id}`, {
       method: 'PUT',
@@ -179,12 +179,12 @@ class ApiClient {
     });
   }
 
-  async deleteContact(id: number) {
+  async deleteContact(id: string) {
     return this.request<{
       success: boolean;
       message: string;
       data: {
-        customer: any;
+        contact: any;
       };
     }>(`/customers/${id}`, {
       method: 'DELETE',
@@ -220,12 +220,12 @@ class ApiClient {
   async createProduct(productData: {
     name: string;
     type: string;
-    sales_price: number;
-    purchase_price: number;
-    hsn_code?: string;
-    category_id?: number;
-    sale_tax_id?: number;
-    purchase_tax_id?: number;
+    salesPrice: number;
+    purchasePrice: number;
+    hsnCode?: string;
+    category?: string;
+    saleTaxId?: string;
+    purchaseTaxId?: string;
   }) {
     return this.request<{
       success: boolean;
@@ -239,7 +239,7 @@ class ApiClient {
     });
   }
 
-  async updateProduct(id: number, productData: any) {
+  async updateProduct(id: string, productData: any) {
     return this.request<{
       success: boolean;
       message: string;
@@ -252,7 +252,7 @@ class ApiClient {
     });
   }
 
-  async deleteProduct(id: number) {
+  async deleteProduct(id: string) {
     return this.request<{
       success: boolean;
       message: string;
@@ -372,6 +372,36 @@ class ApiClient {
     });
   }
 
+  async updateTax(id: string, taxData: {
+    tax_name: string;
+    computation_method: string;
+    rate: number;
+    applicable_on: string;
+  }) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        tax: any;
+      };
+    }>(`/taxes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(taxData),
+    });
+  }
+
+  async deleteTax(id: string) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        tax: any;
+      };
+    }>(`/taxes/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Product Category endpoints
   async getProductCategories() {
     return this.request<{
@@ -431,6 +461,48 @@ class ApiClient {
     }>('/chart-of-accounts', {
       method: 'POST',
       body: JSON.stringify(accountData),
+    });
+  }
+
+  async updateChartOfAccount(id: string, accountData: {
+    account_name: string;
+    account_type: string;
+    description?: string;
+  }) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        account: any;
+      };
+    }>(`/chart-of-accounts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(accountData),
+    });
+  }
+
+  async deleteChartOfAccount(id: string) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        account: any;
+      };
+    }>(`/chart-of-accounts/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updateChartOfAccountStatus(id: string, isActive: boolean) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        account: any;
+      };
+    }>(`/chart-of-accounts/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isArchived: !isActive }),
     });
   }
 }

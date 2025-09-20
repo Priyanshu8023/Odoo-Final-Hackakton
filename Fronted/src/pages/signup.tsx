@@ -196,19 +196,19 @@ const Signup = () => {
             <p className="text-center text-blue-100 mt-2">Join ManufactureOps today</p>
           </CardHeader>
           
-<<<<<<< Updated upstream
           <CardContent className="p-6 max-h-[70vh] overflow-y-auto">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                  Name *
+                  Full Name *
                 </Label>
                 <Input
                   id="name"
+                  type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="Enter full name"
+                  placeholder="Enter your full name"
                   className={`${errors.name ? "border-red-500 focus:ring-red-500" : ""}`}
                 />
                 {errors.name && (
@@ -217,34 +217,10 @@ const Signup = () => {
                     <span>{errors.name}</span>
                   </p>
                 )}
+                <p className="text-xs text-gray-500">
+                  Enter your first and last name
+                </p>
               </div>
-=======
-              <CardContent className="p-8">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Name Field */}
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                      Full Name *
-                    </Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
-                      placeholder="Enter your full name"
-                      className={`${errors.name ? "border-red-500 focus:ring-red-500" : ""}`}
-                    />
-                    {errors.name && (
-                      <p className="text-sm text-red-600 flex items-center space-x-1">
-                        <XCircle className="h-4 w-4" />
-                        <span>{errors.name}</span>
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500">
-                      Enter your first and last name
-                    </p>
-                  </div>
->>>>>>> Stashed changes
 
                   {/* Email Field */}
                   <div className="space-y-2">

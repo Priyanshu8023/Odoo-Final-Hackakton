@@ -12,8 +12,8 @@ import { Tax, TaxFormData } from "@/types/tax";
 interface TaxFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: TaxFormData) => void;
-  tax?: Tax | null;
+  onSave: (data: any) => void;
+  tax?: any;
   isViewMode?: boolean;
 }
 
@@ -43,35 +43,32 @@ export const TaxFormDialog = ({
   tax,
   isViewMode = false,
 }: TaxFormDialogProps) => {
-  const [formData, setFormData] = useState<TaxFormData>({
-    taxName: "",
-    taxPercentage: 0,
-    description: "",
-    computation: "percentage",
-    isActive: true,
+  const [formData, setFormData] = useState({
+    tax_name: "",
+    rate: 0,
+    computation_method: "percentage",
+    applicable_on: "both",
   });
 
   useEffect(() => {
     if (tax) {
       setFormData({
-        taxName: tax.taxName,
-        taxPercentage: tax.taxPercentage,
-        description: tax.description || "",
-        computation: tax.computation || "percentage",
-        isActive: tax.isActive,
+        tax_name: tax.tax_name || "",
+        rate: tax.rate || 0,
+        computation_method: tax.computation_method || "percentage",
+        applicable_on: tax.applicable_on || "both",
       });
     } else {
       setFormData({
-        taxName: "",
-        taxPercentage: 0,
-        description: "",
-        computation: "percentage",
-        isActive: true,
+        tax_name: "",
+        rate: 0,
+        computation_method: "percentage",
+        applicable_on: "both",
       });
     }
   }, [tax, isOpen]);
 
-  const handleInputChange = (field: keyof TaxFormData, value: string | number | boolean) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -97,7 +94,7 @@ export const TaxFormDialog = ({
   const handleQuickRateSelect = (rate: number) => {
     setFormData(prev => ({
       ...prev,
-      taxPercentage: rate,
+      rate: rate,
     }));
   };
 
@@ -133,9 +130,9 @@ export const TaxFormDialog = ({
               <div className="space-y-2">
                 <Label htmlFor="taxName">Tax Name *</Label>
                 <Input
-                  id="taxName"
-                  value={formData.taxName}
-                  onChange={(e) => handleInputChange("taxName", e.target.value)}
+                  id="tax_name"
+                  value={formData.tax_name}
+                  onChange={(e) => handleInputChange("tax_name", e.target.value)}
                   placeholder="e.g., GST 18%, CGST 9%"
                   required
                   disabled={isViewMode}
@@ -145,13 +142,13 @@ export const TaxFormDialog = ({
                 <Label htmlFor="taxPercentage">Tax Percentage *</Label>
                 <div className="flex space-x-2">
                   <Input
-                    id="taxPercentage"
+                    id="rate"
                     type="number"
                     step="0.01"
                     min="0"
                     max="100"
-                    value={formData.taxPercentage}
-                    onChange={(e) => handleInputChange("taxPercentage", parseFloat(e.target.value) || 0)}
+                    value={formData.rate}
+                    onChange={(e) => handleInputChange("rate", parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
                     required
                     disabled={isViewMode}
@@ -175,7 +172,7 @@ export const TaxFormDialog = ({
                       size="sm"
                       onClick={() => handleQuickRateSelect(rate.value)}
                       className={`text-xs ${
-                        formData.taxPercentage === rate.value 
+                        formData.rate === rate.value 
                           ? 'bg-blue-100 border-blue-300 text-blue-700' 
                           : ''
                       }`}
@@ -190,8 +187,8 @@ export const TaxFormDialog = ({
             <div className="space-y-2">
               <Label htmlFor="computation">Computation Method</Label>
               <Select
-                value={formData.computation}
-                onValueChange={(value) => handleInputChange("computation", value)}
+                value={formData.computation_method}
+                onValueChange={(value) => handleInputChange("computation_method", value)}
                 disabled={isViewMode}
               >
                 <SelectTrigger>
@@ -208,73 +205,54 @@ export const TaxFormDialog = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="Enter tax description and usage details"
+              <Label htmlFor="applicable_on">Applicable On</Label>
+              <Select
+                value={formData.applicable_on}
+                onValueChange={(value) => handleInputChange("applicable_on", value)}
                 disabled={isViewMode}
-                rows={3}
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select applicable on" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sales">Sales Only</SelectItem>
+                  <SelectItem value="purchase">Purchase Only</SelectItem>
+                  <SelectItem value="both">Both Sales & Purchase</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
 
-          {/* Tax Status */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Tax Status</h3>
-            <div className="flex items-center space-x-3">
-              <Switch
-                checked={formData.isActive}
-                onCheckedChange={(checked) => handleInputChange("isActive", checked)}
-                disabled={isViewMode}
-                className="data-[state=checked]:bg-green-600"
-              />
-              <div>
-                <Label htmlFor="isActive" className="text-sm font-medium">
-                  {formData.isActive ? 'Active' : 'Inactive'}
-                </Label>
-                <p className="text-xs text-gray-500">
-                  {formData.isActive 
-                    ? 'This tax will be available for use in transactions' 
-                    : 'This tax will be hidden and unavailable for new transactions'
-                  }
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Tax Preview */}
-          {formData.taxName && formData.taxPercentage > 0 && (
+          {formData.tax_name && formData.rate > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Tax Preview</h3>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium">Tax Name:</span>
-                    <p className="text-gray-600">{formData.taxName}</p>
+                    <p className="text-gray-600">{formData.tax_name}</p>
                   </div>
                   <div>
                     <span className="font-medium">Rate:</span>
-                    <p className="text-gray-600">{formData.taxPercentage}%</p>
+                    <p className="text-gray-600">{formData.rate}%</p>
                   </div>
                   <div>
                     <span className="font-medium">Computation:</span>
                     <p className="text-gray-600">
-                      {computationOptions.find(opt => opt.value === formData.computation)?.label}
+                      {computationOptions.find(opt => opt.value === formData.computation_method)?.label}
                     </p>
                   </div>
                   <div>
-                    <span className="font-medium">Status:</span>
-                    <p className={`${formData.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                      {formData.isActive ? 'Active' : 'Inactive'}
-                    </p>
+                    <span className="font-medium">Applicable On:</span>
+                    <p className="text-gray-600 capitalize">{formData.applicable_on}</p>
                   </div>
                 </div>
-                {formData.taxPercentage > 0 && (
+                {formData.rate > 0 && (
                   <div className="mt-3 pt-3 border-t border-gray-200">
                     <p className="text-xs text-gray-500">
-                      <strong>Example:</strong> On a base amount of ₹1,000, this tax would be ₹{formData.taxPercentage * 10}
+                      <strong>Example:</strong> On a base amount of ₹1,000, this tax would be ₹{formData.rate * 10}
                     </p>
                   </div>
                 )}

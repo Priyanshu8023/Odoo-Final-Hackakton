@@ -10,15 +10,15 @@ import { apiClient, ApiError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   type: string;
   sales_price: number;
   purchase_price: number;
   hsn_code?: string;
-  category_id?: number;
-  sale_tax_id?: number;
-  purchase_tax_id?: number;
+  category_id?: string;
+  sale_tax_id?: string;
+  purchase_tax_id?: string;
   category_name?: string;
   sale_tax_name?: string;
   sale_tax_rate?: number;
@@ -59,7 +59,23 @@ const ProductMaster = () => {
 
   const handleCreateProduct = async (productData: any) => {
     try {
-      const response = await apiClient.createProduct(productData);
+      console.log("ProductMaster: handleCreateProduct called with data:", productData);
+      
+      // Transform frontend data to backend format
+      const backendData = {
+        name: productData.productName,
+        type: productData.type === 'Raw Material' ? 'goods' : 'service',
+        salesPrice: productData.salesPrice,
+        purchasePrice: productData.purchasePrice,
+        hsnCode: productData.hsnCode,
+        category: productData.category
+      };
+      
+      console.log("ProductMaster: transformed backend data:", backendData);
+      
+      const response = await apiClient.createProduct(backendData);
+      console.log("ProductMaster: API response:", response);
+      
       if (response.success) {
         toast({
           title: "Success",
@@ -78,9 +94,19 @@ const ProductMaster = () => {
     }
   };
 
-  const handleUpdateProduct = async (id: number, productData: any) => {
+  const handleUpdateProduct = async (id: string, productData: any) => {
     try {
-      const response = await apiClient.updateProduct(id, productData);
+      // Transform frontend data to backend format
+      const backendData = {
+        name: productData.productName,
+        type: productData.type === 'Raw Material' ? 'goods' : 'service',
+        salesPrice: productData.salesPrice,
+        purchasePrice: productData.purchasePrice,
+        hsnCode: productData.hsnCode,
+        category: productData.category
+      };
+      
+      const response = await apiClient.updateProduct(id, backendData);
       if (response.success) {
         toast({
           title: "Success",
@@ -99,7 +125,7 @@ const ProductMaster = () => {
     }
   };
 
-  const handleDeleteProduct = async (id: number) => {
+  const handleDeleteProduct = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         const response = await apiClient.deleteProduct(id);
@@ -122,6 +148,7 @@ const ProductMaster = () => {
   };
 
   const openCreateDialog = () => {
+    console.log("ProductMaster: openCreateDialog called");
     setEditingProduct(null);
     setIsDialogOpen(true);
   };

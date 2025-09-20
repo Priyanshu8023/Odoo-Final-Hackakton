@@ -10,7 +10,7 @@ import { apiClient, ApiError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface Tax {
-  id: number;
+  id: string;
   tax_name: string;
   computation_method: string;
   rate: number;
@@ -50,7 +50,9 @@ const TaxMaster = () => {
 
   const handleCreateTax = async (taxData: any) => {
     try {
+      console.log("TaxMaster: handleCreateTax called with data:", taxData);
       const response = await apiClient.createTax(taxData);
+      console.log("TaxMaster: API response:", response);
       if (response.success) {
         toast({
           title: "Success",
@@ -69,7 +71,51 @@ const TaxMaster = () => {
     }
   };
 
+  const handleUpdateTax = async (id: string, taxData: any) => {
+    try {
+      const response = await apiClient.updateTax(id, taxData);
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Tax updated successfully",
+        });
+        fetchTaxes();
+        setIsDialogOpen(false);
+      }
+    } catch (error) {
+      console.error("Error updating tax:", error);
+      toast({
+        title: "Error",
+        description: error instanceof ApiError ? error.message : "Failed to update tax",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteTax = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this tax?")) {
+      try {
+        const response = await apiClient.deleteTax(id);
+        if (response.success) {
+          toast({
+            title: "Success",
+            description: "Tax deleted successfully",
+          });
+          fetchTaxes();
+        }
+      } catch (error) {
+        console.error("Error deleting tax:", error);
+        toast({
+          title: "Error",
+          description: error instanceof ApiError ? error.message : "Failed to delete tax",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const openCreateDialog = () => {
+    console.log("TaxMaster: openCreateDialog called");
     setEditingTax(null);
     setIsDialogOpen(true);
   };
@@ -176,6 +222,7 @@ const TaxMaster = () => {
                             variant="ghost"
                             size="sm"
                             className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteTax(tax.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -196,8 +243,8 @@ const TaxMaster = () => {
           setIsDialogOpen(false);
           setEditingTax(null);
         }}
-        onSubmit={handleCreateTax}
-        initialData={editingTax}
+        onSave={editingTax ? (data) => handleUpdateTax(editingTax.id, data) : handleCreateTax}
+        tax={editingTax}
       />
     </div>
   );
