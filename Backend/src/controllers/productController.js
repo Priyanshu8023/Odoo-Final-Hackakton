@@ -35,7 +35,13 @@ class ProductController {
   static async getAllProducts(req, res) {
     try {
       const organizationId = req.user.organizationId;
-      const products = await Product.getAll(organizationId);
+      const products = await Product.find({ 
+        organizationId, 
+        isArchived: false 
+      })
+      .populate('saleTaxId', 'tax_name rate computation_method applicable_on')
+      .populate('purchaseTaxId', 'tax_name rate computation_method applicable_on')
+      .sort({ name: 1 });
       
       // Transform products to match frontend expectations
       const transformedProducts = products.map(product => ({
@@ -46,6 +52,12 @@ class ProductController {
         purchase_price: parseFloat(product.purchasePrice.toString()),
         hsn_code: product.hsnCode,
         category_name: product.category,
+        sale_tax_id: product.saleTaxId?._id,
+        sale_tax_name: product.saleTaxId?.tax_name,
+        sale_tax_rate: product.saleTaxId ? parseFloat(product.saleTaxId.rate.toString()) : 0,
+        purchase_tax_id: product.purchaseTaxId?._id,
+        purchase_tax_name: product.purchaseTaxId?.tax_name,
+        purchase_tax_rate: product.purchaseTaxId ? parseFloat(product.purchaseTaxId.rate.toString()) : 0,
         created_at: product.createdAt
       }));
       

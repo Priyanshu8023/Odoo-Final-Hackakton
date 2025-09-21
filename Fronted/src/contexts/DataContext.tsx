@@ -1,21 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { apiClient, ApiError } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-
-interface Contact {
-  _id: string;
-  name: string;
-  type: string[];
-  email?: string;
-  mobile?: string;
-  address?: {
-    city?: string;
-    state?: string;
-    pincode?: string;
-  };
-  profileImageURL?: string;
-  createdAt: string;
-}
+import { useAuth } from './AuthContext';
+import { Contact } from '@/types/contact';
 
 interface Product {
   id: string;
@@ -91,13 +78,24 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [taxesLoading, setTaxesLoading] = useState(false);
   
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
 
   const refreshContacts = useCallback(async () => {
     try {
       setContactsLoading(true);
+      console.log('Fetching contacts...');
       const response = await apiClient.getContacts();
+      console.log('Contacts response:', response);
       if (response.success) {
         setContacts(response.data.contacts);
+        console.log('Contacts loaded:', response.data.contacts.length);
+      } else {
+        console.error('Failed to fetch contacts:', response);
+        toast({
+          title: "Error",
+          description: response.message || "Failed to fetch contacts",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error fetching contacts:', error);
@@ -157,9 +155,19 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     ]);
   }, [refreshContacts, refreshProducts, refreshTaxes]);
 
+  // Wait for authentication to complete before making API calls
+  useEffect(() => {
+    if (!authLoading && user) {
+      console.log('Authentication complete, refreshing data...');
+      refreshAll();
+    }
+  }, [authLoading, user, refreshAll]);
+
   const createContact = useCallback(async (contactData: any): Promise<boolean> => {
     try {
+      console.log('Creating contact with data:', contactData);
       const response = await apiClient.createContact(contactData);
+      console.log('Create contact response:', response);
       if (response.success) {
         toast({
           title: "Success",
@@ -168,8 +176,15 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         // Refresh all data to ensure consistency
         await refreshAll();
         return true;
+      } else {
+        console.error('Failed to create contact:', response);
+        toast({
+          title: "Error",
+          description: response.message || "Failed to create contact",
+          variant: "destructive",
+        });
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('Error creating contact:', error);
       toast({
@@ -249,3 +264,4 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     </DataContext.Provider>
   );
 };
+

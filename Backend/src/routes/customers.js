@@ -13,6 +13,9 @@ router.post('/', adminOrInvoicingUser, validate(contactCreateSchema), ContactCon
 // Get all contacts - Admin and Invoicing User
 router.get('/', adminOrInvoicingUser, ContactController.getContacts);
 
+// Get vendors - Admin and Invoicing User (must be before /:id route)
+router.get('/vendors', adminOrInvoicingUser, ContactController.getVendors);
+
 // Get contact by ID - Admin and Invoicing User
 router.get('/:id', adminOrInvoicingUser, ContactController.getContactById);
 

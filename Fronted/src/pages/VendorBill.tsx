@@ -9,26 +9,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Save, Printer, X, ArrowLeft, CreditCard } from "lucide-react";
 import Header from "@/components/layout/Header";
+import { VendorSelector } from "@/components/purchase/VendorSelector";
+import { ProductSelector } from "@/components/purchase/ProductSelector";
+import { useData } from "@/contexts/DataContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface VendorBillItem {
   id: string;
   srNo: number;
   product: string;
-  unit: string;
+  productId?: string;
+  productName?: string;
   qty: number;
   rate: number;
   discount: number;
   tax: number;
+  taxRate?: number;
+  taxName?: string;
   amount: number;
 }
 
 const VendorBill = () => {
   const navigate = useNavigate();
+  const { refreshContacts, contacts } = useData();
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState({
     vendorBillNo: "20230701-0001", // Pre-filled as shown in design
     billDate: new Date().toISOString().split('T')[0],
+    vendorId: "",
     vendorName: "",
+    vendorEmail: "",
+    vendorMobile: "",
+    vendorAddress: "",
     billRefNo: "",
     billRefDate: "",
     dueDate: "",
@@ -40,7 +53,6 @@ const VendorBill = () => {
       id: "1",
       srNo: 1,
       product: "",
-      unit: "",
       qty: 0,
       rate: 0,
       discount: 0,
@@ -50,6 +62,12 @@ const VendorBill = () => {
   ]);
 
   const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Refresh contacts when component mounts to ensure we have latest vendor data
+  useEffect(() => {
+    refreshContacts();
+  }, [refreshContacts]);
 
   // Load data from Purchase Order if available
   useEffect(() => {
@@ -72,6 +90,63 @@ const VendorBill = () => {
     }
   }, []);
 
+  const handleVendorSelect = (vendorId: string, vendor: any) => {
+    console.log('Selected vendor:', vendor);
+    
+    // Auto-fill vendor details
+    const addressParts = [];
+    if (vendor.address?.city) addressParts.push(vendor.address.city);
+    if (vendor.address?.state) addressParts.push(vendor.address.state);
+    if (vendor.address?.pincode) addressParts.push(vendor.address.pincode);
+    const fullAddress = addressParts.join(', ');
+    
+    setFormData(prev => ({
+      ...prev,
+      vendorId: vendorId,
+      vendorName: vendor.name,
+      vendorEmail: vendor.email || '',
+      vendorMobile: vendor.mobile || '',
+      vendorAddress: fullAddress
+    }));
+  };
+
+  const handleProductSelect = (itemId: string, productId: string, product: any) => {
+    console.log('Selected product:', product);
+    
+    // Auto-fill product details
+    setItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        const newItem = {
+          ...item,
+          product: product.name,
+          productId: productId,
+          productName: product.name,
+          rate: product.purchase_price,
+          taxRate: product.purchase_tax_rate || 0,
+          taxName: product.purchase_tax_name || '',
+          qty: item.qty || 1 // Set default quantity to 1 if it's 0
+        };
+        
+        // Calculate amount with tax using current values
+        const qty = newItem.qty;
+        const rate = newItem.rate || 0;
+        const discount = newItem.discount || 0;
+        const taxRate = newItem.taxRate || 0;
+        
+        const baseAmount = qty * rate;
+        const discountAmount = (baseAmount * discount) / 100;
+        const taxableAmount = baseAmount - discountAmount;
+        const taxAmount = (taxableAmount * taxRate) / 100;
+        
+        newItem.tax = taxAmount;
+        newItem.amount = taxableAmount + taxAmount;
+        
+        return newItem;
+      }
+      return item;
+    }));
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -85,16 +160,18 @@ const VendorBill = () => {
         const updatedItem = { ...item, [field]: value };
         
         // Calculate amount when qty, rate, discount, or tax changes
-        if (['qty', 'rate', 'discount', 'tax'].includes(field)) {
-          const qty = field === 'qty' ? Number(value) : item.qty;
-          const rate = field === 'rate' ? Number(value) : item.rate;
-          const discount = field === 'discount' ? Number(value) : item.discount;
-          const tax = field === 'tax' ? Number(value) : item.tax;
+        if (['qty', 'rate', 'discount', 'tax', 'taxRate'].includes(field)) {
+          const qty = field === 'qty' ? Number(value) : updatedItem.qty;
+          const rate = field === 'rate' ? Number(value) : updatedItem.rate;
+          const discount = field === 'discount' ? Number(value) : updatedItem.discount;
+          const taxRate = field === 'taxRate' ? Number(value) : (updatedItem.taxRate || 0);
           
           const subtotal = qty * rate;
           const discountAmount = (subtotal * discount) / 100;
           const taxableAmount = subtotal - discountAmount;
-          const taxAmount = (taxableAmount * tax) / 100;
+          const taxAmount = (taxableAmount * taxRate) / 100;
+          
+          updatedItem.tax = taxAmount;
           updatedItem.amount = taxableAmount + taxAmount;
         }
         
@@ -109,7 +186,6 @@ const VendorBill = () => {
       id: Date.now().toString(),
       srNo: items.length + 1,
       product: "",
-      unit: "",
       qty: 0,
       rate: 0,
       discount: 0,
@@ -207,16 +283,12 @@ const VendorBill = () => {
               </div>
               <div>
                 <Label htmlFor="vendorName">Vendor Name</Label>
-                <Select onValueChange={(value) => handleInputChange("vendorName", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Vendor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="vendor1">ABC Suppliers</SelectItem>
-                    <SelectItem value="vendor2">XYZ Corporation</SelectItem>
-                    <SelectItem value="vendor3">DEF Industries</SelectItem>
-                  </SelectContent>
-                </Select>
+                <VendorSelector
+                  value={formData.vendorId}
+                  onValueChange={handleVendorSelect}
+                  placeholder="Select Vendor"
+                  refreshTrigger={refreshTrigger}
+                />
               </div>
               <div>
                 <Label htmlFor="billRefNo">Bill Ref No.</Label>
@@ -256,6 +328,57 @@ const VendorBill = () => {
               </div>
             </div>
 
+            {/* Vendor Details Section */}
+            {formData.vendorId && (
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold text-blue-900">Selected Vendor Details</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        vendorId: "",
+                        vendorName: "",
+                        vendorEmail: "",
+                        vendorMobile: "",
+                        vendorAddress: ""
+                      }));
+                    }}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Clear Selection
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-blue-700">Vendor Name</Label>
+                    <p className="text-sm text-blue-900 font-medium">{formData.vendorName}</p>
+                  </div>
+                  {formData.vendorEmail && (
+                    <div>
+                      <Label className="text-sm font-medium text-blue-700">Email</Label>
+                      <p className="text-sm text-blue-900">{formData.vendorEmail}</p>
+                    </div>
+                  )}
+                  {formData.vendorMobile && (
+                    <div>
+                      <Label className="text-sm font-medium text-blue-700">Mobile</Label>
+                      <p className="text-sm text-blue-900">{formData.vendorMobile}</p>
+                    </div>
+                  )}
+                  {formData.vendorAddress && (
+                    <div>
+                      <Label className="text-sm font-medium text-blue-700">Address</Label>
+                      <p className="text-sm text-blue-900">{formData.vendorAddress}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Items Table */}
             <div>
               <div className="flex justify-between items-center mb-4">
@@ -272,7 +395,6 @@ const VendorBill = () => {
                     <TableRow>
                       <TableHead className="w-16">Sr. No.</TableHead>
                       <TableHead>Product</TableHead>
-                      <TableHead className="w-24">Unit</TableHead>
                       <TableHead className="w-24">Qty</TableHead>
                       <TableHead className="w-24">Rate</TableHead>
                       <TableHead className="w-24">Discount %</TableHead>
@@ -286,35 +408,13 @@ const VendorBill = () => {
                       <TableRow key={item.id}>
                         <TableCell>{item.srNo}</TableCell>
                         <TableCell>
-                          <Select 
-                            value={item.product} 
-                            onValueChange={(value) => handleItemChange(item.id, 'product', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Product" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="product1">Product A</SelectItem>
-                              <SelectItem value="product2">Product B</SelectItem>
-                              <SelectItem value="product3">Product C</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <Select 
-                            value={item.unit} 
-                            onValueChange={(value) => handleItemChange(item.id, 'unit', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Unit" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pcs">Pcs</SelectItem>
-                              <SelectItem value="kg">Kg</SelectItem>
-                              <SelectItem value="m">Meter</SelectItem>
-                              <SelectItem value="l">Liter</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <ProductSelector
+                            value={item.productId || ''}
+                            onSelect={(productId, product) => handleProductSelect(item.id, productId, product)}
+                            onClear={() => handleItemChange(item.id, 'product', '')}
+                            placeholder="Select Product"
+                            className="w-full"
+                          />
                         </TableCell>
                         <TableCell>
                           <Input
@@ -341,12 +441,23 @@ const VendorBill = () => {
                           />
                         </TableCell>
                         <TableCell>
-                          <Input
-                            type="number"
-                            value={item.tax}
-                            onChange={(e) => handleItemChange(item.id, 'tax', Number(e.target.value))}
-                            className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
+                          <div className="flex flex-col space-y-1">
+                            <Input
+                              type="number"
+                              value={item.taxRate || 0}
+                              onChange={(e) => handleItemChange(item.id, 'taxRate', Number(e.target.value))}
+                              className="w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              placeholder="Tax %"
+                            />
+                            {item.taxName && (
+                              <span className="text-xs text-muted-foreground">
+                                {item.taxName}
+                              </span>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              Tax: ₹{item.tax.toFixed(2)}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <span className="font-medium">

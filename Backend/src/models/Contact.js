@@ -39,6 +39,12 @@ const contactSchema = new mongoose.Schema({
     type: String, 
     trim: true 
   },
+  vendorRefNo: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true // Allows multiple null values but ensures uniqueness for non-null values
+  },
   userId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User' 
@@ -56,6 +62,7 @@ contactSchema.index({ organizationId: 1 });
 contactSchema.index({ organizationId: 1, type: 1 });
 contactSchema.index({ organizationId: 1, name: 1 });
 contactSchema.index({ organizationId: 1, email: 1 });
+contactSchema.index({ vendorRefNo: 1 });
 
 // Virtual for checking if contact is a customer
 contactSchema.virtual('isCustomer').get(function() {

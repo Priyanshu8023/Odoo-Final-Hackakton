@@ -24,9 +24,7 @@ const ContactMaster = () => {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    refreshContacts();
-  }, [refreshContacts]);
+  // DataContext will automatically refresh contacts when authentication is complete
 
   const handleCreateContact = async (contactData: any) => {
     try {
@@ -82,7 +80,7 @@ const ContactMaster = () => {
           title: "Success",
           description: "Contact updated successfully",
         });
-        fetchContacts();
+        refreshContacts(); // Use refreshContacts instead of fetchContacts
         setEditingContact(null);
       }
     } catch (error) {
@@ -104,7 +102,7 @@ const ContactMaster = () => {
             title: "Success",
             description: "Contact deleted successfully",
           });
-          fetchContacts();
+          refreshContacts(); // Use refreshContacts instead of fetchContacts
         }
       } catch (error) {
         console.error("Error deleting contact:", error);
@@ -122,7 +120,8 @@ const ContactMaster = () => {
     setIsDialogOpen(true);
   };
 
-  const openEditDialog = (contact: Contact) => {
+  const openEditDialog = (contact: any) => {
+    console.log('Opening edit dialog for contact:', contact);
     setEditingContact(contact);
     setIsDialogOpen(true);
   };
@@ -239,7 +238,7 @@ const ContactMaster = () => {
           setEditingContact(null);
         }}
         onSubmit={editingContact ? 
-          (data) => handleUpdateContact(editingContact.id, data) : 
+          (data) => handleUpdateContact(editingContact._id, data) : 
           handleCreateContact
         }
         initialData={editingContact}

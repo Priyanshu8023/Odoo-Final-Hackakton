@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Menu, Users, Package, Receipt, BookOpen, Home, BarChart3, FileText, ShoppingCart, FileText as InvoiceIcon } from "lucide-react";
+import { X, Users, Package, Receipt, Home, BarChart3, ShoppingCart, FileText as InvoiceIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -20,46 +20,34 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       description: "Overview and analytics"
     },
     {
-      title: "Master Data",
-      icon: BookOpen,
-      children: [
-        {
-          title: "Contact Master",
-          icon: Users,
-          path: "/contact-master",
-          description: "Manage contacts, vendors, and customers"
-        },
-        {
-          title: "Product Master",
-          icon: Package,
-          path: "/product-master",
-          description: "Manage products and inventory"
-        },
-        {
-          title: "Taxes Master",
-          icon: Receipt,
-          path: "/taxes-master",
-          description: "Configure tax rates and rules"
-        },
-        {
-          title: "Chart of Accounts",
-          icon: BarChart3,
-          path: "/chart-of-accounts",
-          description: "Manage accounting structure"
-        }
-      ]
+      title: "Contact",
+      icon: Users,
+      path: "/contact",
+      description: "Manage contacts, vendors, and customers"
     },
     {
-      title: "Data Input Forms",
-      icon: FileText,
-      children: [
-        {
-          title: "Purchase Order",
-          icon: ShoppingCart,
-          path: "/purchase-order",
-          description: "Create and manage purchase orders"
-        }
-      ]
+      title: "Product",
+      icon: Package,
+      path: "/product",
+      description: "Manage products and inventory"
+    },
+    {
+      title: "Taxes",
+      icon: Receipt,
+      path: "/taxes",
+      description: "Configure tax rates and rules"
+    },
+    {
+      title: "Chart of Accounts",
+      icon: BarChart3,
+      path: "/chart-of-accounts",
+      description: "Manage accounting structure"
+    },
+    {
+      title: "Purchase Order",
+      icon: ShoppingCart,
+      path: "/purchase-order",
+      description: "Create and manage purchase orders"
     },
     {
       title: "Invoices",
@@ -86,16 +74,19 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed top-0 left-0 h-full w-80 bg-gray-100 shadow-xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col",
+        "fixed top-0 left-0 h-full w-80 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col border-r border-gray-200",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">MO</span>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 flex-shrink-0 bg-white">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-lg">SA</span>
             </div>
-            <h2 className="text-xl font-bold text-gray-900">ManufactureOps</h2>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Shiv Accounts</h2>
+              <p className="text-xs text-gray-500">Accounting System</p>
+            </div>
           </div>
           <Button
             variant="ghost"
@@ -108,67 +99,35 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </div>
 
         {/* Navigation - Scrollable */}
-        <nav className="flex-1 overflow-y-auto p-6 pb-8 space-y-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-6 space-y-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500 bg-white">
           {menuItems.map((item, index) => (
-            <div key={index}>
-              {item.children ? (
-                // Parent item with children
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3 px-3 py-2 text-gray-700 font-semibold">
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.title}</span>
-                  </div>
-                  <div className="ml-6 space-y-1">
-                    {item.children.map((child, childIndex) => (
-                      <Button
-                        key={childIndex}
-                        variant="ghost"
-                        className="w-full justify-start h-auto p-3 text-left hover:bg-gray-200 hover:text-gray-900"
-                        onClick={() => handleNavigation(child.path)}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <child.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <div className="font-medium">{child.title}</div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {child.description}
-                            </div>
-                          </div>
-                        </div>
-                      </Button>
-                    ))}
+            <Button
+              key={index}
+              variant="ghost"
+              className="w-full justify-start h-auto px-4 py-3 text-left hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200"
+              onClick={() => handleNavigation(item.path)}
+            >
+              <div className="flex items-center space-x-3">
+                <item.icon className="h-5 w-5 flex-shrink-0 text-gray-600" />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{item.title}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {item.description}
                   </div>
                 </div>
-              ) : (
-                // Single item
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start h-auto p-3 text-left hover:bg-gray-200 hover:text-gray-900"
-                  onClick={() => handleNavigation(item.path)}
-                >
-                  <div className="flex items-start space-x-3">
-                    <item.icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <div className="font-medium">{item.title}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {item.description}
-                      </div>
-                    </div>
-                  </div>
-                </Button>
-              )}
-            </div>
+              </div>
+            </Button>
           ))}
         </nav>
 
         {/* Footer */}
-        <div className="flex-shrink-0 p-6 border-t border-gray-200 bg-gray-200">
+        <div className="flex-shrink-0 px-6 py-4 border-t border-gray-200 bg-gray-50">
           <div className="text-center">
-            <p className="text-sm text-gray-600">
-              © 2024 ManufactureOps
+            <p className="text-sm text-gray-600 font-medium">
+              © 2024 Shiv Accounts
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Streamline your operations
+              Simple Accounting & Billing
             </p>
           </div>
         </div>

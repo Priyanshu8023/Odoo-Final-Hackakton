@@ -76,6 +76,24 @@ export const ContactFormDialog = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name.trim()) {
+      alert('Please enter a contact name');
+      return;
+    }
+    
+    if (!formData.email.trim()) {
+      alert('Please enter an email address');
+      return;
+    }
+    
+    if (!formData.mobileNo.trim()) {
+      alert('Please enter a mobile number');
+      return;
+    }
+    
+    console.log('Submitting contact form with data:', formData);
     onSubmit(formData);
   };
 

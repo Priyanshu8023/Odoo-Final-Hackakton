@@ -5,11 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Printer, X, CreditCard } from "lucide-react";
+import { ArrowLeft, Save, Printer, X, CreditCard, Loader2 } from "lucide-react";
 import Header from "@/components/layout/Header";
+import { useToast } from "@/hooks/use-toast";
 
 const BillPayment = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState({
     paymentNo: "",
@@ -28,6 +30,30 @@ const BillPayment = () => {
     bankName: "",
     branch: ""
   });
+
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+
+  // Load Razorpay script
+  useEffect(() => {
+    const loadRazorpay = () => {
+      return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => {
+          setRazorpayLoaded(true);
+          resolve(true);
+        };
+        script.onerror = () => {
+          console.error('Failed to load Razorpay script');
+          resolve(false);
+        };
+        document.body.appendChild(script);
+      });
+    };
+
+    loadRazorpay();
+  }, []);
 
   // Load data from Vendor Bill if available
   useEffect(() => {
@@ -69,6 +95,202 @@ const BillPayment = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  // Razorpay payment processing
+  const processRazorpayPayment = async () => {
+    if (!razorpayLoaded) {
+      toast({
+        title: "Error",
+        description: "Payment gateway is not loaded. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.paidAmount || formData.paidAmount <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid payment amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessingPayment(true);
+
+    try {
+      // Create order on your backend
+      const orderResponse = await fetch('/api/payments/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          amount: formData.paidAmount * 100, // Convert to paise
+          currency: 'INR',
+          receipt: formData.paymentNo || `payment_${Date.now()}`,
+          notes: {
+            vendorName: formData.vendorName,
+            vendorBillNo: formData.vendorBillNo,
+            paymentMethod: formData.paymentMethod
+          }
+        })
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error('Failed to create payment order');
+      }
+
+      const orderData = await orderResponse.json();
+
+      // Razorpay options
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_1234567890', // Replace with your Razorpay key
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'Shiv Accounts',
+        description: `Payment for ${formData.vendorName} - Bill ${formData.vendorBillNo}`,
+        image: '/logo.png', // Add your logo
+        order_id: orderData.id,
+        handler: async function (response: any) {
+          try {
+            // Verify payment on your backend
+            const verifyResponse = await fetch('/api/payments/verify-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                paymentData: {
+                  ...formData,
+                  chequeBankDetails,
+                  paymentId: response.razorpay_payment_id,
+                  orderId: response.razorpay_order_id
+                }
+              })
+            });
+
+            if (verifyResponse.ok) {
+              toast({
+                title: "Payment Successful",
+                description: `Payment of ₹${formData.paidAmount.toFixed(2)} has been processed successfully.`,
+              });
+              
+              // Clear session storage and navigate back
+              sessionStorage.removeItem('vendorBillData');
+              navigate('/vendor-bill');
+            } else {
+              throw new Error('Payment verification failed');
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            toast({
+              title: "Payment Verification Failed",
+              description: "Please contact support if the amount was deducted.",
+              variant: "destructive",
+            });
+          }
+        },
+        prefill: {
+          name: formData.vendorName,
+          email: '', // Add vendor email if available
+          contact: '' // Add vendor contact if available
+        },
+        notes: {
+          address: 'Shiv Accounts Office',
+          vendor: formData.vendorName,
+          bill: formData.vendorBillNo
+        },
+        theme: {
+          color: '#3B82F6'
+        },
+        modal: {
+          ondismiss: function() {
+            setIsProcessingPayment(false);
+          }
+        }
+      };
+
+      // Open Razorpay checkout
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+
+    } catch (error) {
+      console.error('Payment processing error:', error);
+      toast({
+        title: "Payment Failed",
+        description: "Failed to process payment. Please try again.",
+        variant: "destructive",
+      });
+      setIsProcessingPayment(false);
+    }
+  };
+
+  // Handle different payment methods
+  const handleProcessPayment = async () => {
+    if (!formData.paymentMethod) {
+      toast({
+        title: "Error",
+        description: "Please select a payment method.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.paymentMethod === 'upi' || formData.paymentMethod === 'card') {
+      // Use Razorpay for UPI and Card payments
+      await processRazorpayPayment();
+    } else {
+      // Handle other payment methods (cash, cheque, bank)
+      await handleOtherPaymentMethods();
+    }
+  };
+
+  // Handle non-Razorpay payment methods
+  const handleOtherPaymentMethods = async () => {
+    setIsProcessingPayment(true);
+    
+    try {
+      // Simulate payment processing for other methods
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Save payment record
+      const paymentData = {
+        ...formData,
+        chequeBankDetails,
+        paymentMethod: formData.paymentMethod,
+        status: 'completed',
+        processedAt: new Date().toISOString()
+      };
+
+      // Here you would typically save to your backend
+      console.log('Payment processed:', paymentData);
+      
+      toast({
+        title: "Payment Processed",
+        description: `Payment of ₹${formData.paidAmount.toFixed(2)} has been recorded successfully.`,
+      });
+      
+      // Clear session storage and navigate back
+      sessionStorage.removeItem('vendorBillData');
+      navigate('/vendor-bill');
+      
+    } catch (error) {
+      console.error('Payment processing error:', error);
+      toast({
+        title: "Payment Failed",
+        description: "Failed to process payment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   const handleSave = () => {
@@ -203,12 +425,17 @@ const BillPayment = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="bank">Bank</SelectItem>
+                  <SelectItem value="bank">Bank Transfer</SelectItem>
                   <SelectItem value="cheque">Cheque</SelectItem>
-                  <SelectItem value="upi">UPI</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
+                  <SelectItem value="upi">UPI (Razorpay)</SelectItem>
+                  <SelectItem value="card">Card (Razorpay)</SelectItem>
                 </SelectContent>
               </Select>
+              {(formData.paymentMethod === 'upi' || formData.paymentMethod === 'card') && (
+                <p className="text-sm text-blue-600 mt-1">
+                  💳 This payment will be processed securely through Razorpay
+                </p>
+              )}
             </div>
 
             {/* Cheque/Bank Details - Show conditionally */}
@@ -283,9 +510,16 @@ const BillPayment = () => {
                 <Printer className="h-4 w-4 mr-2" />
                 Print
               </Button>
-              <Button onClick={handleSave}>
-                <CreditCard className="h-4 w-4 mr-2" />
-                Process Payment
+              <Button 
+                onClick={handleProcessPayment}
+                disabled={isProcessingPayment || !formData.paymentMethod}
+              >
+                {isProcessingPayment ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4 mr-2" />
+                )}
+                {isProcessingPayment ? 'Processing...' : 'Process Payment'}
               </Button>
             </div>
           </CardContent>

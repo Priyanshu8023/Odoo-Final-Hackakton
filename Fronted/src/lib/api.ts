@@ -555,6 +555,29 @@ class ApiClient {
       };
     }>('/customers');
   }
+
+  async getVendors(search?: string) {
+    const queryParams = search ? `?search=${encodeURIComponent(search)}` : '';
+    return this.request<{
+      success: boolean;
+      data: {
+        vendors: Array<{
+          _id: string;
+          name: string;
+          email?: string;
+          mobile?: string;
+          address?: {
+            city?: string;
+            state?: string;
+            pincode?: string;
+          };
+          profileImageURL?: string;
+          vendorRefNo?: string;
+          type: string[];
+        }>;
+      };
+    }>(`/customers/vendors${queryParams}`);
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

@@ -10,8 +10,9 @@ export interface Contact {
     pincode?: string;
   };
   profileImageURL?: string;
+  vendorRefNo?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface ContactFormData {
