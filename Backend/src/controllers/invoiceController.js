@@ -4,14 +4,21 @@ class InvoiceController {
   static async createInvoice(req, res) {
     try {
       const { customer_id, sales_order_id, invoice_date, due_date, status, items } = req.body;
+      const organizationId = req.user.organizationId;
       
       const invoice = await Invoice.create({
-        customer_id,
-        sales_order_id,
-        invoice_date,
-        due_date,
-        status,
-        items
+        organizationId,
+        customerId: customer_id,
+        salesOrderId: sales_order_id,
+        invoiceDate: invoice_date,
+        dueDate: due_date,
+        status: status || 'draft',
+        lineItems: items || [],
+        subTotal: 0, // Will be calculated
+        totalTax: 0, // Will be calculated
+        grandTotal: 0, // Will be calculated
+        amountPaid: 0,
+        balanceDue: 0 // Will be calculated
       });
       
       res.status(201).json({
@@ -30,11 +37,44 @@ class InvoiceController {
   
   static async getAllInvoices(req, res) {
     try {
-      const invoices = await Invoice.getAll();
+      const organizationId = req.user.organizationId;
+      const invoices = await Invoice.getAll(organizationId);
+      
+      // Transform invoices to match frontend expectations
+      const transformedInvoices = invoices.map(invoice => ({
+        id: invoice._id,
+        invoiceNumber: invoice.invoiceNumber,
+        customer_id: invoice.customerId?._id,
+        customer_name: invoice.customerId?.name,
+        customer_email: invoice.customerId?.email,
+        customer_mobile: invoice.customerId?.mobile,
+        invoice_date: invoice.invoiceDate,
+        due_date: invoice.dueDate,
+        status: invoice.status,
+        sub_total: parseFloat(invoice.subTotal.toString()),
+        total_tax: parseFloat(invoice.totalTax.toString()),
+        grand_total: parseFloat(invoice.grandTotal.toString()),
+        amount_paid: parseFloat(invoice.amountPaid.toString()),
+        balance_due: parseFloat(invoice.balanceDue.toString()),
+        line_items: invoice.lineItems.map(item => ({
+          productId: item.productId?._id || item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: parseFloat(item.unitPrice.toString()),
+          tax: {
+            taxId: item.tax?.taxId?._id || item.tax?.taxId,
+            name: item.tax?.name,
+            rate: item.tax?.rate ? parseFloat(item.tax.rate.toString()) : 0
+          },
+          total: parseFloat(item.total.toString())
+        })),
+        created_at: invoice.createdAt,
+        updated_at: invoice.updatedAt
+      }));
       
       res.json({
         success: true,
-        data: { invoices }
+        data: { invoices: transformedInvoices }
       });
     } catch (error) {
       console.error('Get invoices error:', error);

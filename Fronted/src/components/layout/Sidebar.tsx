@@ -9,14 +9,21 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+interface MenuItem {
+  title: string;
+  icon: React.ComponentType<{ className?: string }> | null;
+  path: string;
+  description: string;
+}
+
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navigate = useNavigate();
   const [isReportsOpen, setIsReportsOpen] = useState(false);
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     {
       title: "Dashboard",
-      icon: Home,
+      icon: null,
       path: "/dashboard",
       description: "Overview and analytics"
     },
@@ -133,7 +140,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               onClick={() => handleNavigation(item.path)}
             >
               <div className="flex items-center space-x-3">
-                <item.icon className="h-5 w-5 flex-shrink-0 text-gray-600" />
+                {item.icon && <item.icon className="h-5 w-5 flex-shrink-0 text-gray-600" />}
                 <div className="flex-1">
                   <div className="font-medium text-gray-900">{item.title}</div>
                   <div className="text-xs text-gray-500 mt-0.5">

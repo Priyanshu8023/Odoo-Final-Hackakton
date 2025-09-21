@@ -1,90 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, Search, Eye, Download, Filter } from "lucide-react";
+import { Printer, Search, Eye, Download, Filter, Plus } from "lucide-react";
 import Header from "@/components/layout/Header";
+import { useData } from "@/contexts/DataContext";
+import { apiClient, ApiError } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface Invoice {
   id: string;
   invoiceNumber: string;
-  customerName: string;
-  date: string;
+  customerId: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerMobile?: string;
+  invoiceDate: string;
   dueDate: string;
-  amount: number;
-  status: 'paid' | 'pending' | 'overdue' | 'draft';
-  type: 'sales' | 'purchase';
+  status: 'draft' | 'sent' | 'paid' | 'partially_paid' | 'void';
+  subTotal: number;
+  totalTax: number;
+  grandTotal: number;
+  amountPaid: number;
+  balanceDue: number;
+  lineItems: Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    tax: {
+      taxId?: string;
+      name?: string;
+      rate?: number;
+    };
+    total: number;
+  }>;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 const Invoices = () => {
+  const { 
+    invoices, 
+    invoicesLoading, 
+    refreshInvoices 
+  } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const { toast } = useToast();
 
-  // Sample invoice data
-  const [invoices] = useState<Invoice[]>([
-    {
-      id: "1",
-      invoiceNumber: "INV-2024-001",
-      customerName: "ABC Company Ltd",
-      date: "2024-01-15",
-      dueDate: "2024-02-15",
-      amount: 15000.00,
-      status: 'paid',
-      type: 'sales'
-    },
-    {
-      id: "2",
-      invoiceNumber: "INV-2024-002",
-      customerName: "XYZ Corporation",
-      date: "2024-01-20",
-      dueDate: "2024-02-20",
-      amount: 25000.00,
-      status: 'pending',
-      type: 'sales'
-    },
-    {
-      id: "3",
-      invoiceNumber: "INV-2024-003",
-      customerName: "DEF Industries",
-      date: "2024-01-10",
-      dueDate: "2024-02-10",
-      amount: 18000.00,
-      status: 'overdue',
-      type: 'sales'
-    },
-    {
-      id: "4",
-      invoiceNumber: "PO-2024-001",
-      customerName: "Supplier ABC",
-      date: "2024-01-25",
-      dueDate: "2024-02-25",
-      amount: 12000.00,
-      status: 'draft',
-      type: 'purchase'
-    },
-    {
-      id: "5",
-      invoiceNumber: "INV-2024-004",
-      customerName: "GHI Solutions",
-      date: "2024-01-30",
-      dueDate: "2024-03-01",
-      amount: 32000.00,
-      status: 'paid',
-      type: 'sales'
-    }
-  ]);
+  useEffect(() => {
+    refreshInvoices();
+  }, [refreshInvoices]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
         return 'bg-green-100 text-green-800';
-      case 'pending':
+      case 'sent':
+        return 'bg-blue-100 text-blue-800';
+      case 'partially_paid':
         return 'bg-yellow-100 text-yellow-800';
-      case 'overdue':
+      case 'void':
         return 'bg-red-100 text-red-800';
       case 'draft':
         return 'bg-gray-100 text-gray-800';
@@ -93,22 +74,23 @@ const Invoices = () => {
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'sales':
-        return 'bg-blue-100 text-blue-800';
-      case 'purchase':
-        return 'bg-purple-100 text-purple-800';
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'partially_paid':
+        return 'PARTIALLY PAID';
+      case 'sent':
+        return 'SENT';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return status.toUpperCase();
     }
   };
 
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+                         (invoice.customerName && invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
-    const matchesType = typeFilter === "all" || invoice.type === typeFilter;
+    // For now, we'll treat all invoices as sales type since we don't have purchase invoices in the current model
+    const matchesType = typeFilter === "all" || typeFilter === "sales";
     
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -129,8 +111,9 @@ const Invoices = () => {
               .amount { font-size: 18px; font-weight: bold; }
               .status { padding: 4px 8px; border-radius: 4px; }
               .paid { background-color: #d1fae5; color: #065f46; }
-              .pending { background-color: #fef3c7; color: #92400e; }
-              .overdue { background-color: #fee2e2; color: #991b1b; }
+              .sent { background-color: #dbeafe; color: #1e40af; }
+              .partially_paid { background-color: #fef3c7; color: #92400e; }
+              .void { background-color: #fee2e2; color: #991b1b; }
               .draft { background-color: #f3f4f6; color: #374151; }
             </style>
           </head>
@@ -140,16 +123,21 @@ const Invoices = () => {
               <h2>${invoice.invoiceNumber}</h2>
             </div>
             <div class="invoice-details">
-              <p><strong>Date:</strong> ${new Date(invoice.date).toLocaleDateString()}</p>
+              <p><strong>Date:</strong> ${new Date(invoice.invoiceDate).toLocaleDateString()}</p>
               <p><strong>Due Date:</strong> ${new Date(invoice.dueDate).toLocaleDateString()}</p>
-              <p><strong>Status:</strong> <span class="status ${invoice.status}">${invoice.status.toUpperCase()}</span></p>
+              <p><strong>Status:</strong> <span class="status ${invoice.status}">${getStatusLabel(invoice.status)}</span></p>
             </div>
             <div class="customer-details">
-              <p><strong>Customer:</strong> ${invoice.customerName}</p>
-              <p><strong>Type:</strong> ${invoice.type.toUpperCase()}</p>
+              <p><strong>Customer:</strong> ${invoice.customerName || 'N/A'}</p>
+              <p><strong>Email:</strong> ${invoice.customerEmail || 'N/A'}</p>
+              <p><strong>Mobile:</strong> ${invoice.customerMobile || 'N/A'}</p>
             </div>
             <div class="amount">
-              <p><strong>Amount:</strong> ₹${invoice.amount.toLocaleString()}</p>
+              <p><strong>Sub Total:</strong> ₹${invoice.subTotal.toLocaleString()}</p>
+              <p><strong>Tax:</strong> ₹${invoice.totalTax.toLocaleString()}</p>
+              <p><strong>Grand Total:</strong> ₹${invoice.grandTotal.toLocaleString()}</p>
+              <p><strong>Amount Paid:</strong> ₹${invoice.amountPaid.toLocaleString()}</p>
+              <p><strong>Balance Due:</strong> ₹${invoice.balanceDue.toLocaleString()}</p>
             </div>
           </body>
         </html>
@@ -175,8 +163,9 @@ const Invoices = () => {
               th { background-color: #f2f2f2; }
               .status { padding: 2px 6px; border-radius: 3px; font-size: 12px; }
               .paid { background-color: #d1fae5; color: #065f46; }
-              .pending { background-color: #fef3c7; color: #92400e; }
-              .overdue { background-color: #fee2e2; color: #991b1b; }
+              .sent { background-color: #dbeafe; color: #1e40af; }
+              .partially_paid { background-color: #fef3c7; color: #92400e; }
+              .void { background-color: #fee2e2; color: #991b1b; }
               .draft { background-color: #f3f4f6; color: #374151; }
             </style>
           </head>
@@ -194,7 +183,6 @@ const Invoices = () => {
                   <th>Due Date</th>
                   <th>Amount</th>
                   <th>Status</th>
-                  <th>Type</th>
                 </tr>
               </thead>
               <tbody>
@@ -204,12 +192,11 @@ const Invoices = () => {
         content += `
           <tr>
             <td>${invoice.invoiceNumber}</td>
-            <td>${invoice.customerName}</td>
-            <td>${new Date(invoice.date).toLocaleDateString()}</td>
+            <td>${invoice.customerName || 'N/A'}</td>
+            <td>${new Date(invoice.invoiceDate).toLocaleDateString()}</td>
             <td>${new Date(invoice.dueDate).toLocaleDateString()}</td>
-            <td>₹${invoice.amount.toLocaleString()}</td>
-            <td><span class="status ${invoice.status}">${invoice.status.toUpperCase()}</span></td>
-            <td>${invoice.type.toUpperCase()}</td>
+            <td>₹${invoice.grandTotal.toLocaleString()}</td>
+            <td><span class="status ${invoice.status}">${getStatusLabel(invoice.status)}</span></td>
           </tr>
         `;
       });
@@ -237,6 +224,37 @@ const Invoices = () => {
     console.log("Downloading invoice:", invoice);
   };
 
+  const handleUpdateStatus = async (invoiceId: string, newStatus: string) => {
+    try {
+      const response = await apiClient.updateInvoice(parseInt(invoiceId), { status: newStatus });
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Invoice status updated successfully",
+        });
+        refreshInvoices();
+      }
+    } catch (error) {
+      console.error("Error updating invoice status:", error);
+      toast({
+        title: "Error",
+        description: error instanceof ApiError ? error.message : "Failed to update invoice status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (invoicesLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header title="Invoices" />
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Invoices" />
@@ -252,6 +270,10 @@ const Invoices = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <CardTitle>Invoice List</CardTitle>
               <div className="flex flex-wrap gap-2">
+                <Button variant="default" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Invoice
+                </Button>
                 <Button onClick={handlePrintAll} variant="outline" size="sm">
                   <Printer className="h-4 w-4 mr-2" />
                   Print All
@@ -279,10 +301,11 @@ const Invoices = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
                   <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="sent">Sent</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="partially_paid">Partially Paid</SelectItem>
+                  <SelectItem value="void">Void</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -292,7 +315,6 @@ const Invoices = () => {
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="sales">Sales</SelectItem>
-                  <SelectItem value="purchase">Purchase</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -308,58 +330,60 @@ const Invoices = () => {
                     <TableHead>Due Date</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Type</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredInvoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                      <TableCell>{invoice.customerName}</TableCell>
-                      <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                      <TableCell>₹{invoice.amount.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(invoice.status)}>
-                          {invoice.status.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getTypeColor(invoice.type)}>
-                          {invoice.type.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleView(invoice)}
-                            title="View Invoice"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handlePrint(invoice)}
-                            title="Print Invoice"
-                          >
-                            <Printer className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownload(invoice)}
-                            title="Download Invoice"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  {filteredInvoices.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        No invoices found. Create your first invoice to get started.
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredInvoices.map((invoice) => (
+                      <TableRow key={invoice.id}>
+                        <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                        <TableCell>{invoice.customerName || 'N/A'}</TableCell>
+                        <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                        <TableCell>₹{invoice.grandTotal.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(invoice.status)}>
+                            {getStatusLabel(invoice.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleView(invoice)}
+                              title="View Invoice"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handlePrint(invoice)}
+                              title="Print Invoice"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownload(invoice)}
+                              title="Download Invoice"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -368,7 +392,7 @@ const Invoices = () => {
             <div className="mt-6 flex justify-between items-center text-sm text-gray-600">
               <p>Showing {filteredInvoices.length} of {invoices.length} invoices</p>
               <p>
-                Total Amount: ₹{filteredInvoices.reduce((sum, invoice) => sum + invoice.amount, 0).toLocaleString()}
+                Total Amount: ₹{filteredInvoices.reduce((sum, invoice) => sum + invoice.grandTotal, 0).toLocaleString()}
               </p>
             </div>
           </CardContent>

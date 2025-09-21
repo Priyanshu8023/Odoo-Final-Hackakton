@@ -136,4 +136,60 @@ invoiceSchema.pre('save', async function(next) {
   next();
 });
 
+// Static methods
+invoiceSchema.statics.create = async function(data) {
+  const invoice = new this(data);
+  return await invoice.save();
+};
+
+invoiceSchema.statics.getAll = async function(organizationId) {
+  return await this.find({ organizationId })
+    .populate('customerId', 'name email mobile')
+    .populate('lineItems.productId', 'name')
+    .populate('lineItems.tax.taxId', 'tax_name rate')
+    .sort({ createdAt: -1 });
+};
+
+invoiceSchema.statics.getById = async function(id, organizationId) {
+  return await this.findOne({ _id: id, organizationId })
+    .populate('customerId', 'name email mobile')
+    .populate('lineItems.productId', 'name')
+    .populate('lineItems.tax.taxId', 'tax_name rate');
+};
+
+invoiceSchema.statics.getByIdWithItems = async function(id) {
+  return await this.findById(id)
+    .populate('customerId', 'name email mobile')
+    .populate('lineItems.productId', 'name')
+    .populate('lineItems.tax.taxId', 'tax_name rate');
+};
+
+invoiceSchema.statics.update = async function(id, data, organizationId) {
+  return await this.findOneAndUpdate(
+    { _id: id, organizationId },
+    data,
+    { new: true, runValidators: true }
+  ).populate('customerId', 'name email mobile');
+};
+
+invoiceSchema.statics.updateStatus = async function(id, status) {
+  return await this.findByIdAndUpdate(
+    id,
+    { status },
+    { new: true, runValidators: true }
+  ).populate('customerId', 'name email mobile');
+};
+
+invoiceSchema.statics.delete = async function(id, organizationId) {
+  return await this.findOneAndDelete({ _id: id, organizationId });
+};
+
+invoiceSchema.statics.getByCustomerId = async function(customerId, organizationId) {
+  return await this.find({ customerId, organizationId })
+    .populate('customerId', 'name email mobile')
+    .populate('lineItems.productId', 'name')
+    .populate('lineItems.tax.taxId', 'tax_name rate')
+    .sort({ createdAt: -1 });
+};
+
 module.exports = mongoose.model('Invoice', invoiceSchema);
