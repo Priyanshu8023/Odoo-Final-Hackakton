@@ -19,6 +19,9 @@ import Invoices from "./pages/Invoices";
 import CreateId from "./pages/createid";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
+import PartnerLedger from "./pages/PartnerLedger";
+import ProfitLossReport from "./pages/ProfitLossReport";
+import BalanceSheetReport from "./pages/BalanceSheetReport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -106,6 +109,31 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Invoices />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Reports Routes */}
+              <Route 
+                path="/reports/partner-ledger" 
+                element={
+                  <ProtectedRoute>
+                    <PartnerLedger />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/reports/profit-loss" 
+                element={
+                  <ProtectedRoute>
+                    <ProfitLossReport />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/reports/balance-sheet" 
+                element={
+                  <ProtectedRoute>
+                    <BalanceSheetReport />
                   </ProtectedRoute>
                 } 
               />
