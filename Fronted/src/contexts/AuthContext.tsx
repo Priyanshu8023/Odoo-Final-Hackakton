@@ -51,37 +51,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (storedToken) {
       setToken(storedToken);
       apiClient.setToken(storedToken);
-      // Set user data for development
-      setUser({
-        id: '68ce8a3cc61c753c8a030822',
-        email: 'admin@invoicing.com',
-        role: 'admin',
-        name: 'Admin User',
-        organizationId: '68ce8a3cc61c753c8a03080d',
-        createdAt: new Date().toISOString()
-      });
-      setLoading(false);
-    } else {
-      // Development mode: Auto-login with admin user
-      const performAutoLogin = async () => {
-        try {
-          const response = await apiClient.login('admin@invoicing.com', 'admin123');
-          if (response.success) {
-            const { user: userData, token: authToken } = response.data;
-            setUser(userData);
-            setToken(authToken);
-            apiClient.setToken(authToken);
-            localStorage.setItem('auth_token', authToken);
-          }
-        } catch (error) {
-          console.error('Auto-login failed:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      
-      performAutoLogin();
+      // In a real app, you would verify the token with the backend
+      // For now, we'll just set loading to false
     }
+    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {

@@ -44,14 +44,7 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route 
-                path="/createid" 
-                element={
-                  <ProtectedRoute>
-                    <CreateId />
-                  </ProtectedRoute>
-                } 
-              />
+              <Route path="/createid" element={<CreateId />} />
             <Route 
               path="/contact-master" 
               element={
