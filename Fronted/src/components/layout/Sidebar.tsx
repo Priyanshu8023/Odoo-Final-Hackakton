@@ -22,19 +22,19 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     {
       title: "Contact",
       icon: Users,
-      path: "/contact",
+      path: "/contact-master",
       description: "Manage contacts, vendors, and customers"
     },
     {
       title: "Product",
       icon: Package,
-      path: "/product",
+      path: "/product-master",
       description: "Manage products and inventory"
     },
     {
       title: "Taxes",
       icon: Receipt,
-      path: "/taxes",
+      path: "/taxes-master",
       description: "Configure tax rates and rules"
     },
     {

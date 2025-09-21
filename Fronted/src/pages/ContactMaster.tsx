@@ -13,7 +13,6 @@ import { Contact } from "@/types/contact";
 import { useData } from "@/contexts/DataContext";
 
 const ContactMaster = () => {
-  console.log('ContactMaster component rendering...');
   const { 
     contacts, 
     contactsLoading, 
@@ -121,7 +120,6 @@ const ContactMaster = () => {
   };
 
   const openEditDialog = (contact: any) => {
-    console.log('Opening edit dialog for contact:', contact);
     setEditingContact(contact);
     setIsDialogOpen(true);
   };
@@ -133,9 +131,8 @@ const ContactMaster = () => {
   };
 
   if (contactsLoading) {
-    console.log('ContactMaster loading...');
     return (
-      <div className="min-h-screen bg-dashboard-bg">
+      <div className="min-h-screen bg-gray-50">
         <Header title="Contact Master" />
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -144,10 +141,8 @@ const ContactMaster = () => {
     );
   }
 
-  console.log('ContactMaster rendering with contacts:', contacts);
-
   return (
-    <div className="min-h-screen bg-dashboard-bg">
+    <div className="min-h-screen bg-gray-50">
       <Header title="Contact Master" />
       
       <main className="p-6">

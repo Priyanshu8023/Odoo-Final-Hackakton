@@ -59,7 +59,7 @@ const TaxMaster = () => {
           title: "Success",
           description: "Tax updated successfully",
         });
-        fetchTaxes();
+        refreshTaxes();
         setIsDialogOpen(false);
       }
     } catch (error) {
@@ -81,7 +81,7 @@ const TaxMaster = () => {
             title: "Success",
             description: "Tax deleted successfully",
           });
-          fetchTaxes();
+          refreshTaxes();
         }
       } catch (error) {
         console.error("Error deleting tax:", error);
@@ -131,7 +131,7 @@ const TaxMaster = () => {
 
   if (taxesLoading) {
     return (
-      <div className="min-h-screen bg-dashboard-bg">
+      <div className="min-h-screen bg-gray-50">
         <Header title="Tax Master" />
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>

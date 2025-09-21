@@ -114,7 +114,15 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setProductsLoading(true);
       const response = await apiClient.getProducts();
       if (response.success) {
-        setProducts(response.data.products);
+        // Convert numeric IDs to strings for consistency
+        const productsWithStringIds = response.data.products.map(product => ({
+          ...product,
+          id: String(product.id),
+          category_id: product.category_id ? String(product.category_id) : undefined,
+          sale_tax_id: product.sale_tax_id ? String(product.sale_tax_id) : undefined,
+          purchase_tax_id: product.purchase_tax_id ? String(product.purchase_tax_id) : undefined,
+        }));
+        setProducts(productsWithStringIds);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -133,7 +141,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setTaxesLoading(true);
       const response = await apiClient.getTaxes();
       if (response.success) {
-        setTaxes(response.data.taxes);
+        // Convert numeric IDs to strings for consistency
+        const taxesWithStringIds = response.data.taxes.map(tax => ({
+          ...tax,
+          id: String(tax.id),
+        }));
+        setTaxes(taxesWithStringIds);
       }
     } catch (error) {
       console.error('Error fetching taxes:', error);

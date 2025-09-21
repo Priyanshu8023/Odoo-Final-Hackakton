@@ -197,15 +197,15 @@ class ApiClient {
       success: boolean;
       data: {
         products: Array<{
-          id: number;
+          id: string;
           name: string;
           type: string;
           sales_price: number;
           purchase_price: number;
           hsn_code?: string;
-          category_id?: number;
-          sale_tax_id?: number;
-          purchase_tax_id?: number;
+          category_id?: string;
+          sale_tax_id?: string;
+          purchase_tax_id?: string;
           category_name?: string;
           sale_tax_name?: string;
           sale_tax_rate?: number;
@@ -343,7 +343,7 @@ class ApiClient {
       success: boolean;
       data: {
         taxes: Array<{
-          id: number;
+          id: string;
           tax_name: string;
           computation_method: string;
           rate: number;

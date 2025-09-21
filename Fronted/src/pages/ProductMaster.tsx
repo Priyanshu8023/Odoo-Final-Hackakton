@@ -91,7 +91,7 @@ const ProductMaster = () => {
           title: "Success",
           description: "Product updated successfully",
         });
-        fetchProducts();
+        refreshProducts();
         setEditingProduct(null);
       }
     } catch (error) {
@@ -113,7 +113,7 @@ const ProductMaster = () => {
             title: "Success",
             description: "Product deleted successfully",
           });
-          fetchProducts();
+          refreshProducts();
         }
       } catch (error) {
         console.error("Error deleting product:", error);
@@ -150,7 +150,7 @@ const ProductMaster = () => {
 
   if (productsLoading) {
     return (
-      <div className="min-h-screen bg-dashboard-bg">
+      <div className="min-h-screen bg-gray-50">
         <Header title="Product Master" />
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
