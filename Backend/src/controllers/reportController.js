@@ -495,6 +495,101 @@ class ReportController {
       });
     }
   }
+
+  /**
+   * Get partner ledger data
+   */
+  static async getPartnerLedger(req, res) {
+    try {
+      const organizationId = req.user.organizationId;
+      const { partnerId, startDate, endDate } = req.query;
+
+      // Get all vendors/partners
+      const partners = await Contact.find({
+        organizationId,
+        type: 'vendor',
+        isActive: true
+      }).select('_id name email mobile vendorRefNo');
+
+      let partnerLedgerData = [];
+
+      for (const partner of partners) {
+        // Get invoices for this partner
+        const invoices = await Invoice.find({
+          organizationId,
+          customerId: partner._id,
+          ...(startDate && endDate ? {
+            invoiceDate: {
+              $gte: new Date(startDate),
+              $lte: new Date(endDate)
+            }
+          } : {})
+        }).populate('customerId', 'name email');
+
+        // Get P&L transactions for this partner
+        const ProfitLossTransaction = require('../models/ProfitLossTransaction');
+        const pnlTransactions = await ProfitLossTransaction.find({
+          organizationId,
+          customerId: partner._id,
+          ...(startDate && endDate ? {
+            transactionDate: {
+              $gte: new Date(startDate),
+              $lte: new Date(endDate)
+            }
+          } : {})
+        });
+
+        // Calculate totals
+        const totalInvoices = invoices.reduce((sum, inv) => sum + parseFloat(inv.grandTotal || 0), 0);
+        const totalPaid = invoices.reduce((sum, inv) => sum + parseFloat(inv.amountPaid || 0), 0);
+        const totalBalance = totalInvoices - totalPaid;
+        
+        const totalPurchases = pnlTransactions
+          .filter(t => t.transactionType === 'purchase_order' || t.category === 'Expenses')
+          .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+        partnerLedgerData.push({
+          partnerId: partner._id,
+          partnerName: partner.name,
+          partnerEmail: partner.email,
+          partnerMobile: partner.mobile,
+          vendorRefNo: partner.vendorRefNo,
+          totalInvoices,
+          totalPaid,
+          totalBalance,
+          totalPurchases,
+          invoiceCount: invoices.length,
+          lastTransactionDate: invoices.length > 0 ? 
+            Math.max(...invoices.map(inv => new Date(inv.invoiceDate).getTime())) : null
+        });
+      }
+
+      // Sort by total purchases descending
+      partnerLedgerData.sort((a, b) => b.totalPurchases - a.totalPurchases);
+
+      res.json({
+        success: true,
+        message: 'Partner ledger data retrieved successfully',
+        data: {
+          partners: partnerLedgerData,
+          summary: {
+            totalPartners: partnerLedgerData.length,
+            totalInvoiceAmount: partnerLedgerData.reduce((sum, p) => sum + p.totalInvoices, 0),
+            totalPaidAmount: partnerLedgerData.reduce((sum, p) => sum + p.totalPaid, 0),
+            totalBalanceAmount: partnerLedgerData.reduce((sum, p) => sum + p.totalBalance, 0),
+            totalPurchaseAmount: partnerLedgerData.reduce((sum, p) => sum + p.totalPurchases, 0)
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Get partner ledger error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get partner ledger data',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
 }
 
 module.exports = ReportController;

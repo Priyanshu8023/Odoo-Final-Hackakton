@@ -38,6 +38,23 @@ interface Invoice {
     };
     total: number;
   }>;
+  pdfData?: {
+    fileId?: string;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    mimeType: string;
+    generatedAt: string;
+    generatedBy: string;
+    gridFSFileId?: string;
+  };
+  paymentDetails?: {
+    paymentId: string;
+    paymentMethod: string;
+    transactionId?: string;
+    paymentDate: string;
+    paymentStatus: string;
+  };
   createdAt: string;
   updatedAt?: string;
 }
@@ -219,9 +236,42 @@ const Invoices = () => {
     console.log("Viewing invoice:", invoice);
   };
 
-  const handleDownload = (invoice: Invoice) => {
-    // TODO: Implement download functionality
-    console.log("Downloading invoice:", invoice);
+  const handleDownload = async (invoice: Invoice) => {
+    if (invoice.pdfData && invoice.pdfData.gridFSFileId) {
+      try {
+        // Download PDF from backend
+        const response = await apiClient.downloadPDF(invoice.pdfData.gridFSFileId);
+        
+        // Create blob and download
+        const blob = new Blob([response], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = invoice.pdfData.fileName || `invoice_${invoice.invoiceNumber}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        toast({
+          title: "PDF Downloaded",
+          description: `PDF for invoice ${invoice.invoiceNumber} has been downloaded.`,
+        });
+      } catch (error) {
+        console.error('PDF download error:', error);
+        toast({
+          title: "Download Failed",
+          description: "Failed to download PDF. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "PDF Not Available",
+        description: "No PDF has been generated for this invoice yet.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleUpdateStatus = async (invoiceId: string, newStatus: string) => {
@@ -330,6 +380,7 @@ const Invoices = () => {
                     <TableHead>Due Date</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>PDF</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -352,6 +403,23 @@ const Invoices = () => {
                           <Badge className={getStatusColor(invoice.status)}>
                             {getStatusLabel(invoice.status)}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {invoice.pdfData ? (
+                            <div className="flex items-center space-x-2">
+                              <Badge variant="outline" className="text-green-600 border-green-600">
+                                <Download className="h-3 w-3 mr-1" />
+                                Available
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {new Date(invoice.pdfData.generatedAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          ) : (
+                            <Badge variant="outline" className="text-gray-500">
+                              Not Generated
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-1">

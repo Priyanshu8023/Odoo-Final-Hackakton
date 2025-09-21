@@ -666,6 +666,145 @@ class ApiClient {
       };
     }>(`/reports/balance-sheet?${queryParams.toString()}`);
   }
+
+  async updateInvoiceWithPDF(invoiceId: string, pdfData: any, paymentDetails: any) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        invoice: any;
+      };
+    }>(`/invoices/${invoiceId}/pdf`, {
+      method: 'PATCH',
+      body: JSON.stringify({ pdfData, paymentDetails })
+    });
+  }
+
+  async generateInvoicePDF(invoiceNumber: string) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        invoice: any;
+        pdfInfo: {
+          fileId: string;
+          filename: string;
+          size: number;
+        };
+      };
+    }>(`/pdf/generate/${invoiceNumber}`, {
+      method: 'POST'
+    });
+  }
+
+  async createInvoiceFromPayment(paymentData: {
+    invoiceNumber: string;
+    partnerId: string;
+    partnerName: string;
+    partnerEmail?: string;
+    partnerAddress?: string;
+    amountPaid: number;
+    paymentDate: string;
+    paymentMethod: string;
+    transactionId?: string;
+  }) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        invoice: any;
+        pdfInfo: {
+          fileId: string;
+          filename: string;
+          size: number;
+          storageType: string;
+        };
+      };
+    }>('/invoices/from-payment', {
+      method: 'POST',
+      body: JSON.stringify(paymentData)
+    });
+  }
+
+  async downloadPDF(fileId: string) {
+    return this.request(`/pdf/download/${fileId}`, {
+      method: 'GET',
+      responseType: 'blob'
+    });
+  }
+
+  async addProfitLossTransaction(transactionData: any) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        transaction: any;
+      };
+    }>('/reports/profit-loss/transaction', {
+      method: 'POST',
+      body: JSON.stringify(transactionData)
+    });
+  }
+
+  async addPurchaseOrderTransaction(orderData: {
+    orderId: string;
+    vendorName: string;
+    amount: number;
+    orderDate: string;
+    paymentMethod?: string;
+    description?: string;
+    metadata?: any;
+  }) {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        transaction: any;
+      };
+    }>('/reports/profit-loss/purchase-order', {
+      method: 'POST',
+      body: JSON.stringify(orderData)
+    });
+  }
+
+  async getProfitLossTransactions() {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        transactions: any[];
+      };
+    }>('/reports/profit-loss/transactions');
+  }
+
+  async getPartnerLedger() {
+    return this.request<{
+      success: boolean;
+      message: string;
+      data: {
+        partners: Array<{
+          partnerId: string;
+          partnerName: string;
+          partnerEmail: string;
+          partnerMobile: string;
+          vendorRefNo: string;
+          totalInvoices: number;
+          totalPaid: number;
+          totalBalance: number;
+          totalPurchases: number;
+          invoiceCount: number;
+          lastTransactionDate: number | null;
+        }>;
+        summary: {
+          totalPartners: number;
+          totalInvoiceAmount: number;
+          totalPaidAmount: number;
+          totalBalanceAmount: number;
+          totalPurchaseAmount: number;
+        };
+      };
+    }>('/reports/partner-ledger');
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

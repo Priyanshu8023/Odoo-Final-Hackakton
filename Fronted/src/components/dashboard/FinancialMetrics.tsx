@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { apiClient } from "@/lib/api";
 
 interface FinancialMetricProps {
   title: string;
@@ -115,22 +117,158 @@ function FinancialMetric({ title, periods }: FinancialMetricProps) {
   );
 }
 
+interface DashboardData {
+  totalInvoices: {
+    "24h": number;
+    "7d": number;
+    "30d": number;
+  };
+  totalPurchases: {
+    "24h": number;
+    "7d": number;
+    "30d": number;
+  };
+  totalPayments: {
+    "24h": number;
+    "7d": number;
+    "30d": number;
+  };
+}
+
 export function FinancialMetrics() {
-  // Static data matching the image
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch invoices data
+        const invoicesResponse = await apiClient.getInvoices();
+        console.log('Invoices Response:', invoicesResponse);
+        const invoices = invoicesResponse.success ? invoicesResponse.data.invoices : [];
+        console.log('Invoices:', invoices);
+        
+        // Fetch P&L transactions for purchases
+        const pnlResponse = await apiClient.getProfitLossTransactions();
+        console.log('P&L Response:', pnlResponse);
+        const transactions = pnlResponse.success ? pnlResponse.data.transactions : [];
+        console.log('P&L Transactions:', transactions);
+        
+        // Calculate metrics for different time periods
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        // Calculate invoice totals
+        const totalInvoices = {
+          "24h": invoices
+            .filter((invoice: any) => new Date(invoice.invoiceDate) >= oneDayAgo)
+            .reduce((sum: number, invoice: any) => sum + parseFloat(invoice.grandTotal || 0), 0),
+          "7d": invoices
+            .filter((invoice: any) => new Date(invoice.invoiceDate) >= sevenDaysAgo)
+            .reduce((sum: number, invoice: any) => sum + parseFloat(invoice.grandTotal || 0), 0),
+          "30d": invoices
+            .filter((invoice: any) => new Date(invoice.invoiceDate) >= thirtyDaysAgo)
+            .reduce((sum: number, invoice: any) => sum + parseFloat(invoice.grandTotal || 0), 0),
+        };
+        
+        // Calculate purchase totals from P&L transactions
+        const purchaseTransactions = transactions.filter((t: any) => 
+          t.transactionType === 'purchase_order' || t.category === 'Expenses'
+        );
+        
+        const totalPurchases = {
+          "24h": purchaseTransactions
+            .filter((t: any) => new Date(t.transactionDate) >= oneDayAgo)
+            .reduce((sum: number, t: any) => sum + parseFloat(t.amount || 0), 0),
+          "7d": purchaseTransactions
+            .filter((t: any) => new Date(t.transactionDate) >= sevenDaysAgo)
+            .reduce((sum: number, t: any) => sum + parseFloat(t.amount || 0), 0),
+          "30d": purchaseTransactions
+            .filter((t: any) => new Date(t.transactionDate) >= thirtyDaysAgo)
+            .reduce((sum: number, t: any) => sum + parseFloat(t.amount || 0), 0),
+        };
+        
+        // Calculate payment totals from P&L transactions
+        const paymentTransactions = transactions.filter((t: any) => 
+          t.transactionType === 'payment_received' || t.category === 'Revenue'
+        );
+        
+        const totalPayments = {
+          "24h": paymentTransactions
+            .filter((t: any) => new Date(t.transactionDate) >= oneDayAgo)
+            .reduce((sum: number, t: any) => sum + parseFloat(t.amount || 0), 0),
+          "7d": paymentTransactions
+            .filter((t: any) => new Date(t.transactionDate) >= sevenDaysAgo)
+            .reduce((sum: number, t: any) => sum + parseFloat(t.amount || 0), 0),
+          "30d": paymentTransactions
+            .filter((t: any) => new Date(t.transactionDate) >= thirtyDaysAgo)
+            .reduce((sum: number, t: any) => sum + parseFloat(t.amount || 0), 0),
+        };
+        
+        setData({
+          totalInvoices,
+          totalPurchases,
+          totalPayments
+        });
+        
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data');
+        // Set default values on error
+        setData({
+          totalInvoices: { "24h": 0, "7d": 0, "30d": 0 },
+          totalPurchases: { "24h": 0, "7d": 0, "30d": 0 },
+          totalPayments: { "24h": 0, "7d": 0, "30d": 0 }
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-gray-100 p-8 rounded-2xl shadow-inner">
+        <div className="flex items-center justify-center h-32">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
+          <span className="ml-2 text-gray-600">Loading dashboard data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gray-100 p-8 rounded-2xl shadow-inner">
+        <div className="text-center text-red-600">
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   const metrics = [
     {
       title: "TOTAL INVOICE",
       periods: {
         "24h": {
-          value: "₹0",
+          value: `₹${data?.totalInvoices["24h"].toLocaleString() || "0"}`,
           changeType: "neutral" as const,
         },
         "7d": {
-          value: "₹ 23,610",
+          value: `₹${data?.totalInvoices["7d"].toLocaleString() || "0"}`,
           changeType: "neutral" as const,
         },
         "30d": {
-          value: "₹ 23,610",
+          value: `₹${data?.totalInvoices["30d"].toLocaleString() || "0"}`,
           changeType: "neutral" as const,
         },
       },
@@ -139,15 +277,15 @@ export function FinancialMetrics() {
       title: "TOTAL PURCHASE",
       periods: {
         "24h": {
-          value: "₹ 0",
+          value: `₹${data?.totalPurchases["24h"].toLocaleString() || "0"}`,
           changeType: "neutral" as const,
         },
         "7d": {
-          value: "₹ 17,857",
+          value: `₹${data?.totalPurchases["7d"].toLocaleString() || "0"}`,
           changeType: "neutral" as const,
         },
         "30d": {
-          value: "₹ 17,857",
+          value: `₹${data?.totalPurchases["30d"].toLocaleString() || "0"}`,
           changeType: "neutral" as const,
         },
       },
@@ -156,15 +294,15 @@ export function FinancialMetrics() {
       title: "TOTAL PAYMENT",
       periods: {
         "24h": {
-          value: "₹ 0",
+          value: `₹${data?.totalPayments["24h"].toLocaleString() || "0"}`,
           changeType: "neutral" as const,
         },
         "7d": {
-          value: "₹ 5,752",
+          value: `₹${data?.totalPayments["7d"].toLocaleString() || "0"}`,
           changeType: "neutral" as const,
         },
         "30d": {
-          value: "₹ 5,752",
+          value: `₹${data?.totalPayments["30d"].toLocaleString() || "0"}`,
           changeType: "neutral" as const,
         },
       },

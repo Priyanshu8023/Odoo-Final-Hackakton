@@ -94,6 +94,60 @@ const invoiceSchema = new mongoose.Schema({
   balanceDue: { 
     type: mongoose.Schema.Types.Decimal128, 
     required: true 
+  },
+  // PDF storage fields
+  pdfData: {
+    fileId: { 
+      type: mongoose.Schema.Types.ObjectId 
+    },
+    fileName: { 
+      type: String, 
+      trim: true 
+    },
+    filePath: { 
+      type: String, 
+      trim: true 
+    },
+    fileSize: { 
+      type: Number 
+    },
+    mimeType: { 
+      type: String, 
+      default: 'application/pdf' 
+    },
+    generatedAt: { 
+      type: Date 
+    },
+    generatedBy: { 
+      type: String, 
+      trim: true 
+    },
+    gridFSFileId: { 
+      type: String 
+    }
+  },
+  // Payment details
+  paymentDetails: {
+    paymentId: { 
+      type: String, 
+      trim: true 
+    },
+    paymentMethod: { 
+      type: String, 
+      trim: true 
+    },
+    transactionId: { 
+      type: String, 
+      trim: true 
+    },
+    paymentDate: { 
+      type: Date 
+    },
+    paymentStatus: { 
+      type: String, 
+      enum: ['pending', 'paid', 'failed', 'refunded'],
+      default: 'pending' 
+    }
   }
 }, {
   timestamps: true
@@ -190,6 +244,37 @@ invoiceSchema.statics.getByCustomerId = async function(customerId, organizationI
     .populate('lineItems.productId', 'name')
     .populate('lineItems.tax.taxId', 'tax_name rate')
     .sort({ createdAt: -1 });
+};
+
+invoiceSchema.statics.updateWithPDF = async function(invoiceId, pdfData, paymentDetails) {
+  return await this.findByIdAndUpdate(
+    invoiceId,
+    {
+      $set: {
+        pdfData: {
+          fileId: pdfData.fileId,
+          fileName: pdfData.fileName,
+          filePath: pdfData.filePath,
+          fileSize: pdfData.fileSize,
+          mimeType: pdfData.mimeType || 'application/pdf',
+          generatedAt: new Date(),
+          generatedBy: pdfData.generatedBy || 'system',
+          gridFSFileId: pdfData.gridFSFileId
+        },
+        paymentDetails: {
+          paymentId: paymentDetails.paymentId,
+          paymentMethod: paymentDetails.paymentMethod,
+          transactionId: paymentDetails.transactionId,
+          paymentDate: new Date(paymentDetails.paymentDate),
+          paymentStatus: paymentDetails.paymentStatus || 'paid'
+        },
+        status: 'paid',
+        amountPaid: paymentDetails.amountPaid,
+        balanceDue: 0
+      }
+    },
+    { new: true, runValidators: true }
+  ).populate('customerId', 'name email mobile');
 };
 
 module.exports = mongoose.model('Invoice', invoiceSchema);

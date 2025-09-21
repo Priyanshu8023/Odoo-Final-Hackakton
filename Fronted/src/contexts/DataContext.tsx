@@ -58,6 +58,23 @@ interface Invoice {
     };
     total: number;
   }>;
+  pdfData?: {
+    fileId?: string;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    mimeType: string;
+    generatedAt: string;
+    generatedBy: string;
+    gridFSFileId?: string;
+  };
+  paymentDetails?: {
+    paymentId: string;
+    paymentMethod: string;
+    transactionId?: string;
+    paymentDate: string;
+    paymentStatus: string;
+  };
   createdAt: string;
   updatedAt?: string;
 }
@@ -219,6 +236,23 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           amountPaid: parseFloat(invoice.amount_paid?.toString() || invoice.amountPaid?.toString() || '0'),
           balanceDue: parseFloat(invoice.balance_due?.toString() || invoice.balanceDue?.toString() || '0'),
           lineItems: invoice.line_items || invoice.lineItems || [],
+          pdfData: invoice.pdf_data ? {
+            fileId: invoice.pdf_data.file_id || invoice.pdf_data.fileId,
+            fileName: invoice.pdf_data.file_name || invoice.pdf_data.fileName,
+            filePath: invoice.pdf_data.file_path || invoice.pdf_data.filePath,
+            fileSize: invoice.pdf_data.file_size || invoice.pdf_data.fileSize,
+            mimeType: invoice.pdf_data.mime_type || invoice.pdf_data.mimeType,
+            generatedAt: invoice.pdf_data.generated_at || invoice.pdf_data.generatedAt,
+            generatedBy: invoice.pdf_data.generated_by || invoice.pdf_data.generatedBy,
+            gridFSFileId: invoice.pdf_data.grid_fs_file_id || invoice.pdf_data.gridFSFileId
+          } : undefined,
+          paymentDetails: invoice.payment_details ? {
+            paymentId: invoice.payment_details.payment_id || invoice.payment_details.paymentId,
+            paymentMethod: invoice.payment_details.payment_method || invoice.payment_details.paymentMethod,
+            transactionId: invoice.payment_details.transaction_id || invoice.payment_details.transactionId,
+            paymentDate: invoice.payment_details.payment_date || invoice.payment_details.paymentDate,
+            paymentStatus: invoice.payment_details.payment_status || invoice.payment_details.paymentStatus
+          } : undefined,
           createdAt: invoice.created_at || invoice.createdAt,
           updatedAt: invoice.updated_at || invoice.updatedAt
         }));

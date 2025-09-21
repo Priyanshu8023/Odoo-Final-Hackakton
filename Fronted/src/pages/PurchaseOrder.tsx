@@ -485,13 +485,13 @@ const PurchaseOrder = () => {
                               placeholder="Tax %"
                             />
                             {item.taxName && (
-                              <span className="text-xs text-muted-foreground">
+                              <div className="text-xs text-blue-600 font-medium">
                                 {item.taxName}
-                              </span>
+                              </div>
                             )}
-                            <span className="text-xs text-muted-foreground">
+                            <div className="text-xs text-green-600 font-medium">
                               Tax: ₹{item.tax.toFixed(2)}
-                            </span>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>

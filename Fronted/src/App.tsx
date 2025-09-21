@@ -22,6 +22,7 @@ import Signup from "./pages/signup";
 import PartnerLedger from "./pages/PartnerLedger";
 import ProfitLossReport from "./pages/ProfitLossReport";
 import BalanceSheetReport from "./pages/BalanceSheetReport";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -134,6 +135,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <BalanceSheetReport />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/payment-success" 
+                element={
+                  <ProtectedRoute>
+                    <PaymentSuccess />
                   </ProtectedRoute>
                 } 
               />

@@ -28,5 +28,11 @@ router.delete('/:id', adminOrInvoicingUser, InvoiceController.deleteInvoice);
 // Get invoices by customer - Admin and Invoicing User
 router.get('/customer/:customer_id', adminOrInvoicingUser, InvoiceController.getInvoicesByCustomer);
 
+// Update invoice with PDF data - Admin and Invoicing User
+router.patch('/:id/pdf', adminOrInvoicingUser, InvoiceController.updateInvoiceWithPDF);
+
+// Create invoice from payment data - Admin and Invoicing User
+router.post('/from-payment', adminOrInvoicingUser, InvoiceController.createInvoiceFromPayment);
+
 module.exports = router;
 

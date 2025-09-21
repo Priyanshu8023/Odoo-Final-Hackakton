@@ -121,7 +121,14 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
         >
           {selectedProduct ? (
             <div className="flex items-center justify-between w-full">
-              <span className="truncate">{selectedProduct.name}</span>
+              <div className="flex flex-col">
+                <span className="truncate">{selectedProduct.name}</span>
+                {selectedProduct.purchase_tax_name && (
+                  <span className="text-xs text-blue-600 font-medium">
+                    Tax: {selectedProduct.purchase_tax_name} ({selectedProduct.purchase_tax_rate}%)
+                  </span>
+                )}
+              </div>
               <div className="flex items-center space-x-1 ml-2">
                 {onClear && (
                   <Button
@@ -180,7 +187,7 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({
                     <div className="text-sm text-muted-foreground">
                       <span>Purchase: ₹{product.purchase_price}</span>
                       {product.purchase_tax_name && (
-                        <span className="ml-2">
+                        <span className="ml-2 text-blue-600 font-medium">
                           | Tax: {product.purchase_tax_name} ({product.purchase_tax_rate}%)
                         </span>
                       )}

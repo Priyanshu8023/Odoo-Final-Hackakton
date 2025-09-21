@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Save, Printer, X, CreditCard, Loader2 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import { useToast } from "@/hooks/use-toast";
+import { PaymentService } from "@/services/paymentService";
 
 const BillPayment = () => {
   const navigate = useNavigate();
@@ -21,39 +22,11 @@ const BillPayment = () => {
     billAmount: 0,
     paidAmount: 0,
     balanceAmount: 0,
-    paymentMethod: ""
+    paymentMethod: "cash_on_delivery"
   });
 
-  const [chequeBankDetails, setChequeBankDetails] = useState({
-    chequeNo: "",
-    chequeDate: "",
-    bankName: "",
-    branch: ""
-  });
 
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
-
-  // Load Razorpay script
-  useEffect(() => {
-    const loadRazorpay = () => {
-      return new Promise((resolve) => {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.onload = () => {
-          setRazorpayLoaded(true);
-          resolve(true);
-        };
-        script.onerror = () => {
-          console.error('Failed to load Razorpay script');
-          resolve(false);
-        };
-        document.body.appendChild(script);
-      });
-    };
-
-    loadRazorpay();
-  }, []);
 
   // Load data from Vendor Bill if available
   useEffect(() => {
@@ -90,147 +63,7 @@ const BillPayment = () => {
     }));
   };
 
-  const handleChequeBankChange = (field: string, value: string) => {
-    setChequeBankDetails(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
 
-  // Razorpay payment processing
-  const processRazorpayPayment = async () => {
-    if (!razorpayLoaded) {
-      toast({
-        title: "Error",
-        description: "Payment gateway is not loaded. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.paidAmount || formData.paidAmount <= 0) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid payment amount.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessingPayment(true);
-
-    try {
-      // Create order on your backend
-      const orderResponse = await fetch('/api/payments/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
-        body: JSON.stringify({
-          amount: formData.paidAmount * 100, // Convert to paise
-          currency: 'INR',
-          receipt: formData.paymentNo || `payment_${Date.now()}`,
-          notes: {
-            vendorName: formData.vendorName,
-            vendorBillNo: formData.vendorBillNo,
-            paymentMethod: formData.paymentMethod
-          }
-        })
-      });
-
-      if (!orderResponse.ok) {
-        throw new Error('Failed to create payment order');
-      }
-
-      const orderData = await orderResponse.json();
-
-      // Razorpay options
-      const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_1234567890', // Replace with your Razorpay key
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'Shiv Accounts',
-        description: `Payment for ${formData.vendorName} - Bill ${formData.vendorBillNo}`,
-        image: '/logo.png', // Add your logo
-        order_id: orderData.id,
-        handler: async function (response: any) {
-          try {
-            // Verify payment on your backend
-            const verifyResponse = await fetch('/api/payments/verify-payment', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-              },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                paymentData: {
-                  ...formData,
-                  chequeBankDetails,
-                  paymentId: response.razorpay_payment_id,
-                  orderId: response.razorpay_order_id
-                }
-              })
-            });
-
-            if (verifyResponse.ok) {
-              toast({
-                title: "Payment Successful",
-                description: `Payment of ₹${formData.paidAmount.toFixed(2)} has been processed successfully.`,
-              });
-              
-              // Clear session storage and navigate back
-              sessionStorage.removeItem('vendorBillData');
-              navigate('/vendor-bill');
-            } else {
-              throw new Error('Payment verification failed');
-            }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            toast({
-              title: "Payment Verification Failed",
-              description: "Please contact support if the amount was deducted.",
-              variant: "destructive",
-            });
-          }
-        },
-        prefill: {
-          name: formData.vendorName,
-          email: '', // Add vendor email if available
-          contact: '' // Add vendor contact if available
-        },
-        notes: {
-          address: 'Shiv Accounts Office',
-          vendor: formData.vendorName,
-          bill: formData.vendorBillNo
-        },
-        theme: {
-          color: '#3B82F6'
-        },
-        modal: {
-          ondismiss: function() {
-            setIsProcessingPayment(false);
-          }
-        }
-      };
-
-      // Open Razorpay checkout
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
-
-    } catch (error) {
-      console.error('Payment processing error:', error);
-      toast({
-        title: "Payment Failed",
-        description: "Failed to process payment. Please try again.",
-        variant: "destructive",
-      });
-      setIsProcessingPayment(false);
-    }
-  };
 
   // Handle different payment methods
   const handleProcessPayment = async () => {
@@ -243,49 +76,61 @@ const BillPayment = () => {
       return;
     }
 
-    if (formData.paymentMethod === 'upi' || formData.paymentMethod === 'card') {
-      // Use Razorpay for UPI and Card payments
-      await processRazorpayPayment();
-    } else {
-      // Handle other payment methods (cash, cheque, bank)
-      await handleOtherPaymentMethods();
-    }
+    // Only handle cash on delivery
+    await handleCashOnDeliveryPayment();
   };
 
-  // Handle non-Razorpay payment methods
-  const handleOtherPaymentMethods = async () => {
+  // Handle cash on delivery payment
+  const handleCashOnDeliveryPayment = async () => {
     setIsProcessingPayment(true);
     
     try {
-      // Simulate payment processing for other methods
+      // Simulate payment processing for cash on delivery
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Save payment record
-      const paymentData = {
-        ...formData,
-        chequeBankDetails,
-        paymentMethod: formData.paymentMethod,
-        status: 'completed',
-        processedAt: new Date().toISOString()
-      };
-
-      // Here you would typically save to your backend
-      console.log('Payment processed:', paymentData);
-      
-      toast({
-        title: "Payment Processed",
-        description: `Payment of ₹${formData.paidAmount.toFixed(2)} has been recorded successfully.`,
+      // Process payment using the new workflow
+      console.log('Starting cash on delivery payment processing with data:', {
+        invoiceNumber: formData.vendorBillNo,
+        partnerName: formData.vendorName,
+        amountPaid: formData.paidAmount,
+        paymentMethod: formData.paymentMethod
       });
-      
-      // Clear session storage and navigate back
-      sessionStorage.removeItem('vendorBillData');
-      navigate('/vendor-bill');
+
+      const paymentResult = await PaymentService.processPayment({
+        invoiceNumber: formData.vendorBillNo,
+        partnerId: 'vendor-123', // In real app, get from form data
+        partnerName: formData.vendorName,
+        partnerEmail: 'vendor@example.com', // In real app, get from partner data
+        partnerAddress: 'Vendor Address', // In real app, get from partner data
+        amountPaid: formData.paidAmount,
+        paymentDate: formData.paymentDate,
+        paymentMethod: formData.paymentMethod,
+        transactionId: `COD-${Date.now()}` // Generate COD transaction ID
+      });
+
+      console.log('Payment processing result:', paymentResult);
+
+      if (paymentResult.success && paymentResult.paymentData) {
+        console.log('Payment successful, navigating to success page');
+        toast({
+          title: "Order Placed Successfully",
+          description: `Your order has been placed successfully. Payment of ₹${formData.paidAmount.toFixed(2)} will be collected upon delivery.`,
+        });
+        
+        // Navigate to success page with payment data
+        navigate('/payment-success', { 
+          state: paymentResult.paymentData 
+        });
+      } else {
+        console.error('Payment processing failed:', paymentResult.error);
+        throw new Error(paymentResult.error || 'Payment processing failed');
+      }
       
     } catch (error) {
       console.error('Payment processing error:', error);
       toast({
-        title: "Payment Failed",
-        description: "Failed to process payment. Please try again.",
+        title: "Order Failed",
+        description: error instanceof Error ? error.message : "An error occurred while placing your order.",
         variant: "destructive",
       });
     } finally {
@@ -313,7 +158,6 @@ const BillPayment = () => {
     navigate('/vendor-bill');
   };
 
-  const showChequeBankFields = formData.paymentMethod === 'cheque' || formData.paymentMethod === 'bank';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -419,75 +263,19 @@ const BillPayment = () => {
             {/* Payment Method */}
             <div>
               <Label htmlFor="paymentMethod">Payment Method</Label>
-              <Select onValueChange={(value) => handleInputChange("paymentMethod", value)}>
+              <Select onValueChange={(value) => handleInputChange("paymentMethod", value)} value="cash_on_delivery">
                 <SelectTrigger>
                   <SelectValue placeholder="Select Payment Method" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="bank">Bank Transfer</SelectItem>
-                  <SelectItem value="cheque">Cheque</SelectItem>
-                  <SelectItem value="upi">UPI (Razorpay)</SelectItem>
-                  <SelectItem value="card">Card (Razorpay)</SelectItem>
+                  <SelectItem value="cash_on_delivery">Cash on Delivery</SelectItem>
                 </SelectContent>
               </Select>
-              {(formData.paymentMethod === 'upi' || formData.paymentMethod === 'card') && (
-                <p className="text-sm text-blue-600 mt-1">
-                  💳 This payment will be processed securely through Razorpay
-                </p>
-              )}
+              <p className="text-sm text-green-600 mt-1">
+                💰 Payment will be collected upon delivery
+              </p>
             </div>
 
-            {/* Cheque/Bank Details - Show conditionally */}
-            {showChequeBankFields && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-4">
-                  {formData.paymentMethod === 'cheque' ? 'Cheque Details' : 'Bank Details'}
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {formData.paymentMethod === 'cheque' && (
-                    <>
-                      <div>
-                        <Label htmlFor="chequeNo">Cheque No.</Label>
-                        <Input
-                          id="chequeNo"
-                          value={chequeBankDetails.chequeNo}
-                          onChange={(e) => handleChequeBankChange("chequeNo", e.target.value)}
-                          placeholder="Enter Cheque Number"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="chequeDate">Cheque Date</Label>
-                        <Input
-                          id="chequeDate"
-                          type="date"
-                          value={chequeBankDetails.chequeDate}
-                          onChange={(e) => handleChequeBankChange("chequeDate", e.target.value)}
-                        />
-                      </div>
-                    </>
-                  )}
-                  <div>
-                    <Label htmlFor="bankName">Bank Name</Label>
-                    <Input
-                      id="bankName"
-                      value={chequeBankDetails.bankName}
-                      onChange={(e) => handleChequeBankChange("bankName", e.target.value)}
-                      placeholder="Enter Bank Name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="branch">Branch</Label>
-                    <Input
-                      id="branch"
-                      value={chequeBankDetails.branch}
-                      onChange={(e) => handleChequeBankChange("branch", e.target.value)}
-                      placeholder="Enter Branch"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Payment Status Information */}
             <div className="bg-blue-50 p-4 rounded-lg">
@@ -519,7 +307,7 @@ const BillPayment = () => {
                 ) : (
                   <CreditCard className="h-4 w-4 mr-2" />
                 )}
-                {isProcessingPayment ? 'Processing...' : 'Process Payment'}
+                {isProcessingPayment ? 'Placing Order...' : 'Place Order'}
               </Button>
             </div>
           </CardContent>
