@@ -59,7 +59,7 @@ const TaxMaster = () => {
           title: "Success",
           description: "Tax updated successfully",
         });
-        fetchTaxes();
+        refreshTaxes();
         setIsDialogOpen(false);
       }
     } catch (error) {
@@ -81,7 +81,7 @@ const TaxMaster = () => {
             title: "Success",
             description: "Tax deleted successfully",
           });
-          fetchTaxes();
+          refreshTaxes();
         }
       } catch (error) {
         console.error("Error deleting tax:", error);

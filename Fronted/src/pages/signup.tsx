@@ -193,7 +193,7 @@ const Signup = () => {
               </div>
               <span>Create Account</span>
             </CardTitle>
-            <p className="text-center text-blue-100 mt-2">Join ManufactureOps today</p>
+            <p className="text-center text-blue-100 mt-2">Join Shiv Accounts today</p>
           </CardHeader>
           
           <CardContent className="p-6 max-h-[70vh] overflow-y-auto">

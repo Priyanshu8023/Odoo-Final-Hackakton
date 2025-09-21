@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { User, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
+import { User, Eye, EyeOff, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 
 interface CreateUserFormData {
@@ -39,6 +41,9 @@ const CreateId = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showReEnterPassword, setShowReEnterPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleInputChange = (field: keyof CreateUserFormData, value: string) => {
     setFormData(prev => ({
@@ -150,6 +155,21 @@ const CreateId = () => {
       reEnterPassword: "",
     });
     setErrors({});
+    
+    // Navigate based on authentication status
+    if (user) {
+      navigate("/dashboard");
+    } else {
+      navigate("/");
+    }
+  };
+
+  const handleBackToHome = () => {
+    if (user) {
+      navigate("/dashboard");
+    } else {
+      navigate("/");
+    }
   };
 
   const getPasswordStrength = () => {

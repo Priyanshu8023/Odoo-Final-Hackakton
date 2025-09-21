@@ -3,10 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Factory, BarChart3, Settings, Users, UserPlus, LogIn, ArrowRight, CheckCircle, Zap, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [visibleSections, setVisibleSections] = useState<Set<number>>(new Set());
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -247,32 +249,67 @@ const Index = () => {
       <section id="auth-section" className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="container mx-auto text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Join thousands of small businesses who trust Shiv Accounts to manage their finances and operations
-          </p>
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <Button 
-              variant="secondary" 
-              size="lg"
-              onClick={() => navigate("/createid")}
-              className="shadow-2xl bg-white text-blue-700 hover:bg-blue-50 px-8 py-4 text-lg font-semibold"
-            >
-              <UserPlus className="h-5 w-5 mr-2" />
-              Create Account
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => navigate("/login")}
-              className="shadow-2xl bg-white/10 border-white/30 text-white hover:bg-white/20 px-8 py-4 text-lg font-semibold"
-            >
-              <LogIn className="h-5 w-5 mr-2" />
-              Login / Signup
-            </Button>
-          </div>
+          {user ? (
+            // User is logged in - show dashboard access
+            <>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+                Welcome back, {user.name}!
+              </h2>
+              <p className="text-xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed">
+                Ready to manage your business finances? Access your dashboard to continue where you left off.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                <Button 
+                  variant="secondary" 
+                  size="lg"
+                  onClick={() => navigate("/dashboard")}
+                  className="shadow-2xl bg-white text-blue-700 hover:bg-blue-50 px-8 py-4 text-lg font-semibold"
+                >
+                  <BarChart3 className="h-5 w-5 mr-2" />
+                  Go to Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => navigate("/createid")}
+                  className="shadow-2xl bg-white/10 border-white/30 text-white hover:bg-white/20 px-8 py-4 text-lg font-semibold"
+                >
+                  <UserPlus className="h-5 w-5 mr-2" />
+                  Create New User
+                </Button>
+              </div>
+            </>
+          ) : (
+            // User is not logged in - show auth options
+            <>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+                Ready to Get Started?
+              </h2>
+              <p className="text-xl text-blue-100 mb-12 max-w-3xl mx-auto leading-relaxed">
+                Join thousands of small businesses who trust Shiv Accounts to manage their finances and operations
+              </p>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                <Button 
+                  variant="secondary" 
+                  size="lg"
+                  onClick={() => navigate("/createid")}
+                  className="shadow-2xl bg-white text-blue-700 hover:bg-blue-50 px-8 py-4 text-lg font-semibold"
+                >
+                  <UserPlus className="h-5 w-5 mr-2" />
+                  Create Account
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => navigate("/login")}
+                  className="shadow-2xl bg-white/10 border-white/30 text-white hover:bg-white/20 px-8 py-4 text-lg font-semibold"
+                >
+                  <LogIn className="h-5 w-5 mr-2" />
+                  Login
+                </Button>
+              </div>
+            </>
+          )}
         </div>
         
         {/* Decorative elements */}

@@ -91,7 +91,7 @@ const ProductMaster = () => {
           title: "Success",
           description: "Product updated successfully",
         });
-        fetchProducts();
+        refreshProducts();
         setEditingProduct(null);
       }
     } catch (error) {
@@ -113,7 +113,7 @@ const ProductMaster = () => {
             title: "Success",
             description: "Product deleted successfully",
           });
-          fetchProducts();
+          refreshProducts();
         }
       } catch (error) {
         console.error("Error deleting product:", error);
