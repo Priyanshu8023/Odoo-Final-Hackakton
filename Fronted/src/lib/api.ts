@@ -578,6 +578,94 @@ class ApiClient {
       };
     }>(`/customers/vendors${queryParams}`);
   }
+
+  async getProfitLossReport(params: {
+    startDate?: string;
+    endDate?: string;
+  } = {}) {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('start_date', params.startDate);
+    if (params.endDate) queryParams.append('end_date', params.endDate);
+
+    return this.request<{
+      success: boolean;
+      data: {
+        revenue: {
+          total: number;
+          items: Array<{
+            name: string;
+            amount: number;
+            percentage: number;
+          }>;
+        };
+        expenses: {
+          total: number;
+          items: Array<{
+            name: string;
+            amount: number;
+            percentage: number;
+          }>;
+        };
+        gross_profit: number;
+        net_profit: number;
+        profit_margin: number;
+        period: {
+          start_date: string;
+          end_date: string;
+        };
+      };
+    }>(`/reports/profit-loss?${queryParams.toString()}`);
+  }
+
+  async getBalanceSheetReport(params: {
+    asOfDate?: string;
+  } = {}) {
+    const queryParams = new URLSearchParams();
+    if (params.asOfDate) queryParams.append('as_of_date', params.asOfDate);
+
+    return this.request<{
+      success: boolean;
+      data: {
+        assets: {
+          current: Array<{
+            name: string;
+            amount: number;
+            percentage: number;
+          }>;
+          fixed: Array<{
+            name: string;
+            amount: number;
+            percentage: number;
+          }>;
+          total: number;
+        };
+        liabilities: {
+          current: Array<{
+            name: string;
+            amount: number;
+            percentage: number;
+          }>;
+          long_term: Array<{
+            name: string;
+            amount: number;
+            percentage: number;
+          }>;
+          total: number;
+        };
+        equity: {
+          items: Array<{
+            name: string;
+            amount: number;
+            percentage: number;
+          }>;
+          total: number;
+        };
+        total_assets: number;
+        total_liabilities_equity: number;
+        as_of_date: string;
+      };
+    }>(`/reports/balance-sheet?${queryParams.toString()}`);
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

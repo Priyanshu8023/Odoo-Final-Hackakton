@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Users, Package, Receipt, Home, BarChart3, ShoppingCart, FileText as InvoiceIcon } from "lucide-react";
+import { X, Users, Package, Receipt, Home, BarChart3, ShoppingCart, FileText as InvoiceIcon, ChevronDown, ChevronRight, FileBarChart, TrendingUp, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navigate = useNavigate();
+  const [isReportsOpen, setIsReportsOpen] = useState(false);
 
   const menuItems = [
     {
@@ -42,7 +43,31 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       icon: BarChart3,
       path: "/chart-of-accounts",
       description: "Manage accounting structure"
+    }
+  ];
+
+  const reportItems = [
+    {
+      title: "Partner Ledger",
+      icon: FileBarChart,
+      path: "/reports/partner-ledger",
+      description: "View partner transaction history"
     },
+    {
+      title: "Profit & Loss Report",
+      icon: TrendingUp,
+      path: "/reports/profit-loss",
+      description: "Financial performance analysis"
+    },
+    {
+      title: "Balance Sheet",
+      icon: Scale,
+      path: "/reports/balance-sheet",
+      description: "Assets, liabilities, and equity"
+    }
+  ];
+
+  const bottomMenuItems = [
     {
       title: "Purchase Order",
       icon: ShoppingCart,
@@ -101,6 +126,74 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         {/* Navigation - Scrollable */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-6 space-y-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500 bg-white">
           {menuItems.map((item, index) => (
+            <Button
+              key={index}
+              variant="ghost"
+              className="w-full justify-start h-auto px-4 py-3 text-left hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200"
+              onClick={() => handleNavigation(item.path)}
+            >
+              <div className="flex items-center space-x-3">
+                <item.icon className="h-5 w-5 flex-shrink-0 text-gray-600" />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{item.title}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {item.description}
+                  </div>
+                </div>
+              </div>
+            </Button>
+          ))}
+
+          {/* Reports Dropdown */}
+          <div className="space-y-1">
+            <Button
+              variant="ghost"
+              className="w-full justify-start h-auto px-4 py-3 text-left hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200"
+              onClick={() => setIsReportsOpen(!isReportsOpen)}
+            >
+              <div className="flex items-center space-x-3">
+                <FileBarChart className="h-5 w-5 flex-shrink-0 text-gray-600" />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">Reports</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Financial reports and analytics
+                  </div>
+                </div>
+                {isReportsOpen ? (
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                )}
+              </div>
+            </Button>
+
+            {/* Reports Submenu */}
+            {isReportsOpen && (
+              <div className="ml-6 space-y-1 border-l border-gray-200 pl-4">
+                {reportItems.map((item, index) => (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    className="w-full justify-start h-auto px-3 py-2 text-left hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200"
+                    onClick={() => handleNavigation(item.path)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <item.icon className="h-4 w-4 flex-shrink-0 text-gray-500" />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-800 text-sm">{item.title}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {item.description}
+                        </div>
+                      </div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Menu Items */}
+          {bottomMenuItems.map((item, index) => (
             <Button
               key={index}
               variant="ghost"
