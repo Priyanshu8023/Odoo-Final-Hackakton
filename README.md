@@ -9,10 +9,6 @@ The Accounting & Invoicing System is a comprehensive full-stack web application 
 ### Problem it solves
 Traditional invoicing and accounting methods are often manual, prone to error, and disconnected from modern payment gateways. This project bridges that gap by offering an integrated solution where invoices can be securely generated, distributed, and paid online seamlessly.
 
-### Use cases
-- **Freelancers & Agencies:** Create and send customized invoices to clients and effortlessly track payment statuses.
-- **Small Businesses:** Manage customer data, view financial dashboards, and handle basic day-to-day accounting.
-- **E-commerce & Service Providers:** Integrate natively with payment gateways to receive secure, trackable transactions.
 
 ## 🧠 Features
 - **Secure Authentication:** User registration and secured login flow using JWT and bcrypt password hashing.
@@ -43,7 +39,6 @@ Traditional invoicing and accounting methods are often manual, prone to error, a
 
 ### DevOps & External Services
 - **Payment Gateway:** Razorpay
-- **Process Management:** Concurrently, Nodemon
 - **Linting & Formatting:** ESLint
 
 ## 📂 Project Structure
@@ -74,55 +69,61 @@ Traditional invoicing and accounting methods are often manual, prone to error, a
  ┗ 📜 package.json       # Root orchestrator for concurrent execution
 ```
 
+## 🖼️ Architecture Diagram
+
+```mermaid
+flowchart TB
+    classDef user fill:#2d3748,stroke:#cbd5e0,stroke-width:2px,color:#fff,rx:20px,ry:20px
+    classDef react fill:#61dafb,stroke:#005fcc,stroke-width:2px,color:#000,rx:5px,ry:5px
+    classDef node fill:#68a063,stroke:#3b7337,stroke-width:2px,color:#fff,rx:5px,ry:5px
+    classDef db fill:#47A248,stroke:#2d692e,stroke-width:2px,color:#fff,rx:5px,ry:5px
+    classDef gateway fill:#003B73,stroke:#1e40af,stroke-width:2px,color:#fff,rx:5px,ry:5px
+    classDef container fill:#f7fafc,stroke:#e2e8f0,stroke-width:2px,stroke-dasharray: 5 5,rx:10px,ry:10px
+
+    User((👤 Client / User)):::user
+
+    subgraph Frontend [🌍 Frontend Application - Vite]
+        direction TB
+        UI[🧩 UI Components & Views\n(React, Radix, Tailwind)]:::react
+        State[⚡ State Management\n(TanStack React Query)]:::react
+        Router[🔀 Routing & Forms\n(React Router, Zod)]:::react
+        
+        UI <--> State
+        UI <--> Router
+    end
+    class Frontend container
+
+    subgraph Backend [⚙️ Backend Server - Express.js]
+        direction TB
+        Gateway[🚪 API Gateway / Router]:::node
+        Auth[🛡️ Auth & Security\n(JWT, Helmet, bcrypt)]:::node
+        Logic[🧠 Business Controllers\n(Invoices, Users)]:::node
+        Services[📄 Document Generation\n(PDFKit, Puppeteer)]:::node
+        
+        Gateway --> Auth
+        Auth --> Logic
+        Logic --> Services
+    end
+    class Backend container
+
+    Database[(💾 MongoDB Data Store)]:::db
+    PaymentGateway{{💳 Razorpay Service}}:::gateway
+
+    %% Relationships
+    User <==>|HTTPS| UI
+    State <==>|REST API Calls| Gateway
+    Router -.-> State
+    Logic <==>|Mongoose Object Models| Database
+    Logic <==>|Secure API Keys| PaymentGateway
+
+```
+
 ## 🧩 System Architecture
 The application follows a decoupled Client-Server architecture. 
 1. The **Frontend (React)** handles user interaction, form validation (using Zod), and local state management. It communicates asynchronously with the backend via RESTful APIs, with TanStack React Query managing server state, caching, and loading/error handling.
 2. The **Backend (Express)** serves as the central API gateway. It validates incoming payloads using Joi, authenticates requests via JWT, processes core business logic, and generates documents.
 3. The **Database (MongoDB)** stores sensitive records such as user profiles, invoice data, and transaction logs.
 4. An **External Gateway (Razorpay)** handles secure, PCI-compliant payment initiations and verifications.
-
-## 🖼️ Architecture Diagram
-
-```mermaid
-flowchart TB
-    %% Clean and highly-compatible styling
-    classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    classDef highlight fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
-    classDef ext fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
-    classDef dbStyle fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
-
-    User(("👤 Client / User")):::highlight
-
-    subgraph Frontend ["🌍 Frontend Application (React & Vite)"]
-        UI["🧩 UI Components & Views"]
-        State["⚡ State Management (React Query)"]
-        Router["🔀 Routing & Forms (React Router)"]
-        
-        UI <--> State
-        UI <--> Router
-    end
-
-    subgraph Backend ["⚙️ Backend API Server (Node.js & Express)"]
-        Gateway["🚪 API Gateway"]
-        Auth["🛡️ Security Middleware (JWT)"]
-        Logic["🧠 Business Controllers"]
-        Services["📄 Service Providers (PDF Generation)"]
-        
-        Gateway --> Auth
-        Auth --> Logic
-        Logic --> Services
-    end
-
-    Database[("💾 MongoDB Data Store")]:::dbStyle
-    PaymentGateway{{"💳 External Service (Razorpay)"}}:::ext
-
-    %% Relationships
-    User <==>|"HTTPS Requests"| UI
-    State <==>|"REST API Data"| Gateway
-    Router -.-> State
-    Logic <==>|"Mongoose Object Models"| Database
-    Logic <==>|"Secure API Keys"| PaymentGateway
-```
 
 ## 📡 API Endpoints (Assumed Core Routes)
 
