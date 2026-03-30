@@ -1,255 +1,199 @@
+# Accounting & Invoicing System
+
 # Demo Video
 https://drive.google.com/drive/folders/1K_IhJbgcrs9WAT5Q8N0wEBg2RpVxEhz2?usp=sharing
 
-# Accounting System - Full Stack Application
+## 🚀 Overview
+The Accounting & Invoicing System is a comprehensive full-stack web application designed to simplify financial management and billing processes for small to medium-sized businesses. It streamlines the creation of professional invoices, tracks payments, and provides real-time financial insights. By automating manual accounting tasks, this platform helps business owners save time, reduce human errors, and get paid faster.
 
-A comprehensive accounting and invoicing application built with React, Node.js, Express, and MongoDB.
+### Problem it solves
+Traditional invoicing and accounting methods are often manual, prone to error, and disconnected from modern payment gateways. This project bridges that gap by offering an integrated solution where invoices can be securely generated, distributed, and paid online seamlessly.
 
-## 🚀 Quick Start
+### Use cases
+- **Freelancers & Agencies:** Create and send customized invoices to clients and effortlessly track payment statuses.
+- **Small Businesses:** Manage customer data, view financial dashboards, and handle basic day-to-day accounting.
+- **E-commerce & Service Providers:** Integrate natively with payment gateways to receive secure, trackable transactions.
+
+## 🧠 Features
+- **Secure Authentication:** User registration and secured login flow using JWT and bcrypt password hashing.
+- **Dynamic Invoice Generation:** Create customized, professional PDF invoices on the fly using Puppeteer and PDFKit.
+- **Payment Integration:** Seamless, real-time payment processing heavily integrated with Razorpay.
+- **Financial Dashboard:** Intuitive and interactive charts representing cash flow and revenue metrics.
+- **Customer Management:** Keep track of client profiles and their transaction histories in one place.
+- **Responsive & Accessible UI:** A modern, mobile-friendly interface built with Radix UI, Shadcn, and Tailwind CSS.
+- **Robust Security:** Integrated Helmet and Express rate limiting to prevent abuse and ensure API security.
+
+## 🛠️ Tech Stack
+### Frontend
+- **Framework:** React 18 (with Vite)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS, Radix UI, Shadcn UI Components
+- **State Management & Data Fetching:** TanStack React Query
+- **Routing:** React Router DOM
+- **Forms & Validation:** React Hook Form, Zod
+- **Data Visualization:** Recharts
+
+### Backend
+- **Framework:** Node.js, Express.js
+- **Database:** MongoDB (with Mongoose ODM)
+- **Authentication:** JSON Web Tokens (JWT), bcryptjs
+- **Validation:** Joi
+- **Document Generation:** PDFKit, Puppeteer
+- **File Handling:** Multer
+
+### DevOps & External Services
+- **Payment Gateway:** Razorpay
+- **Process Management:** Concurrently, Nodemon
+- **Linting & Formatting:** ESLint
+
+## 📂 Project Structure
+```text
+📦 Odoo-Final-Hackakton
+ ┣ 📂 Backend
+ ┃ ┣ 📂 src
+ ┃ ┃ ┣ 📂 controllers    # Business logic for API endpoints
+ ┃ ┃ ┣ 📂 database       # Database seeding and migration scripts
+ ┃ ┃ ┣ 📂 middlewares    # Auth, validation, and error handling
+ ┃ ┃ ┣ 📂 models         # Mongoose schemas (User, Invoice, etc.)
+ ┃ ┃ ┣ 📂 routes         # Express REST API route definitions
+ ┃ ┃ ┣ 📂 utils          # Helper functions (exporting, PDF generation)
+ ┃ ┃ ┗ 📜 server.js      # Main backend entry point
+ ┃ ┗ 📜 package.json
+ ┣ 📂 Fronted
+ ┃ ┣ 📂 src
+ ┃ ┃ ┣ 📂 components     # Reusable UI components (Shadcn, Radix)
+ ┃ ┃ ┣ 📂 pages          # Main application screens and views
+ ┃ ┃ ┣ 📂 hooks          # Custom reusable React hooks
+ ┃ ┃ ┣ 📂 lib            # API clients, utilities, and helpers
+ ┃ ┃ ┣ 📜 App.tsx        # Main application root component
+ ┃ ┃ ┗ 📜 main.tsx       # React DOM rendering entry
+ ┃ ┣ 📜 tailwind.config.ts
+ ┃ ┣ 📜 vite.config.ts
+ ┃ ┗ 📜 package.json
+ ┣ 📂 scripts            # Utility setup, env validation, and execution scripts
+ ┗ 📜 package.json       # Root orchestrator for concurrent execution
+```
+
+## 🧩 System Architecture
+The application follows a decoupled Client-Server architecture. 
+1. The **Frontend (React)** handles user interaction, form validation (using Zod), and local state management. It communicates asynchronously with the backend via RESTful APIs, with TanStack React Query managing server state, caching, and loading/error handling.
+2. The **Backend (Express)** serves as the central API gateway. It validates incoming payloads using Joi, authenticates requests via JWT, processes core business logic, and generates documents.
+3. The **Database (MongoDB)** stores sensitive records such as user profiles, invoice data, and transaction logs.
+4. An **External Gateway (Razorpay)** handles secure, PCI-compliant payment initiations and verifications.
+
+## 🖼️ Architecture Diagram
+
+```mermaid
+flowchart TB
+    classDef user fill:#2d3748,stroke:#cbd5e0,stroke-width:2px,color:#fff,rx:20px,ry:20px
+    classDef react fill:#61dafb,stroke:#005fcc,stroke-width:2px,color:#000,rx:5px,ry:5px
+    classDef node fill:#68a063,stroke:#3b7337,stroke-width:2px,color:#fff,rx:5px,ry:5px
+    classDef db fill:#47A248,stroke:#2d692e,stroke-width:2px,color:#fff,rx:5px,ry:5px
+    classDef gateway fill:#003B73,stroke:#1e40af,stroke-width:2px,color:#fff,rx:5px,ry:5px
+    classDef container fill:#f7fafc,stroke:#e2e8f0,stroke-width:2px,stroke-dasharray: 5 5,rx:10px,ry:10px
+
+    User((👤 Client / User)):::user
+
+    subgraph Frontend [🌍 Frontend Application - Vite]
+        direction TB
+        UI[🧩 UI Components & Views\n(React, Radix, Tailwind)]:::react
+        State[⚡ State Management\n(TanStack React Query)]:::react
+        Router[🔀 Routing & Forms\n(React Router, Zod)]:::react
+        
+        UI <--> State
+        UI <--> Router
+    end
+    class Frontend container
+
+    subgraph Backend [⚙️ Backend Server - Express.js]
+        direction TB
+        Gateway[🚪 API Gateway / Router]:::node
+        Auth[🛡️ Auth & Security\n(JWT, Helmet, bcrypt)]:::node
+        Logic[🧠 Business Controllers\n(Invoices, Users)]:::node
+        Services[📄 Document Generation\n(PDFKit, Puppeteer)]:::node
+        
+        Gateway --> Auth
+        Auth --> Logic
+        Logic --> Services
+    end
+    class Backend container
+
+    Database[(💾 MongoDB Data Store)]:::db
+    PaymentGateway{{💳 Razorpay Service}}:::gateway
+
+    %% Relationships
+    User <==>|HTTPS| UI
+    State <==>|REST API Calls| Gateway
+    Router -.-> State
+    Logic <==>|Mongoose Object Models| Database
+    Logic <==>|Secure API Keys| PaymentGateway
+```
+
+## 📡 API Endpoints (Assumed Core Routes)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| **POST** | `/api/auth/register` | Register a new user account |
+| **POST** | `/api/auth/login` | Authenticate user credentials and return a JWT |
+| **GET**  | `/api/invoices` | Retrieve a list of invoices for the authenticated user |
+| **POST** | `/api/invoices` | Create a new invoice record |
+| **GET**  | `/api/invoices/:id/pdf` | Generate and retrieve a PDF version of a specific invoice |
+| **POST** | `/api/payments/create-order` | Initialize a new Razorpay payment order |
+| **POST** | `/api/payments/verify` | Verify the signature of a successful Razorpay transaction |
+
+> *Note: Endpoints dealing with invoices and payments are strictly protected and require a valid `Bearer` token in the Authorization header.*
+
+## ⚙️ Installation & Setup
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB (v4.4 or higher)
-- npm or yarn
+- [Node.js](https://nodejs.org/) (v16 or higher recommended)
+- [MongoDB](https://www.mongodb.com/) (Local installation or MongoDB Atlas cluster URI)
+- A [Razorpay](https://razorpay.com/) Developer Account for API keys
 
-### One-Command Setup & Run
-```bash
-# Complete setup and start both servers
-npm run setup-and-run
-```
+### Step-by-Step Guide
 
-### Manual Setup
-```bash
-# 1. Install root dependencies
-npm install
+1. **Clone the repository**
+   ```bash
+   git clone <your-repository-url>
+   cd Odoo-Final-Hackakton
+   ```
 
-# 2. Install backend dependencies
-cd Backend
-npm install
+2. **Install all dependencies**
+   The project is configured to install root, backend, and frontend dependencies easily:
+   ```bash
+   npm run install:all
+   ```
 
-# 3. Install frontend dependencies
-cd ../Fronted
-npm install
+3. **Configure Environment Variables**
+   Create a `.env` file in the `Backend` directory and optionally in the `Fronted` directory. Populate them using the template below.
 
-# 4. Setup environment files
-cd ..
-npm run setup:env
+4. **Run the Initialization Scripts**
+   Validate your environment and start the application. The root package configuration simplifies this:
+   ```bash
+   npm run setup-and-run
+   # OR run manually via concurrently:
+   npm run dev
+   ```
+   - The frontend development server will typically be accessible at `http://localhost:5173`
+   - The backend API will typically run on `http://localhost:5000`
 
-# 5. Start MongoDB service
-# On Windows: net start MongoDB
-# On macOS: brew services start mongodb-community
-# On Linux: sudo systemctl start mongod
+## 🔐 Environment Variables
 
-# 6. Run database migration
-cd Backend
-npm run migrate
+Ensure the following environment variables are properly configured in your `Backend/.env` file:
 
-# 7. Start both servers
-cd ..
-npm run dev
-```
-
-## 📁 Project Structure
-
-```
-accounting-system/
-├── Backend/                 # Node.js/Express API
-│   ├── src/
-│   │   ├── controllers/     # API route handlers
-│   │   ├── models/          # Database models
-│   │   ├── routes/          # API routes
-│   │   ├── middleware/      # Auth & validation
-│   │   ├── database/        # Schema & migrations
-│   │   └── utils/           # Helper functions
-│   ├── package.json
-│   └── .env                 # Backend environment
-├── Fronted/                 # React frontend
-│   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── pages/           # Page components
-│   │   ├── contexts/        # React contexts
-│   │   ├── lib/             # API client & utilities
-│   │   └── hooks/           # Custom hooks
-│   ├── package.json
-│   └── .env                 # Frontend environment
-├── scripts/                 # Setup scripts
-├── package.json             # Root package.json
-└── README.md
-```
-
-## 🔧 Available Scripts
-
-### Root Level
-- `npm run dev` - Start both frontend and backend
-- `npm run setup` - Install all dependencies and setup environment
-- `npm run setup-and-run` - Complete setup and start both servers
-- `npm run test:mongodb` - Test MongoDB connection
-- `npm run install:all` - Install dependencies for all projects
-- `npm run build` - Build both frontend and backend
-- `npm run start` - Start production servers
-
-### Backend Only
-```bash
-cd Backend
-npm run dev          # Start development server
-npm run build        # Build for production
-npm start            # Start production server
-npm run migrate      # Run database migrations
-```
-
-### Frontend Only
-```bash
-cd Fronted
-npm run dev          # Start development server
-npm run build        # Build for production
-npm start            # Start production server
-```
-
-## 🌐 URLs
-
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3000/api
-- **API Health Check**: http://localhost:3000/api/health
-
-## 🔐 Default Login Credentials
-
-- **Email**: admin@invoicing.com
-- **Password**: admin123
-- **Role**: Admin
-
-## 🗄️ Database Schema
-
-The application uses a comprehensive MongoDB schema with:
-
-### Master Data Collections
-- `organizations` - Business entities
-- `users` - System users and authentication
-- `contacts` - Customers and vendors
-- `products` - Product catalog
-- `taxes` - Tax rates and rules
-- `chartOfAccounts` - Financial accounts
-
-### Transaction Collections
-- `invoices` - Customer invoices
-- `vendorBills` - Vendor bills
-- `payments` - Payment records
-
-### System Collections
-- `journalEntries` - Double-entry accounting
-- `inventoryMovements` - Inventory tracking
-
-## 🎯 Features
-
-### Authentication & Authorization
-- JWT-based authentication
-- Role-based access control (Admin, Invoicing User, Contact)
-- Protected routes
-- User registration and login
-
-### Master Data Management
-- **Contacts**: Customer and vendor management
-- **Products**: Product catalog with pricing
-- **Taxes**: Tax rate configuration
-- **Chart of Accounts**: Financial account structure
-
-### Transaction Management
-- Customer invoice creation and management
-- Vendor bill processing
-- Payment tracking
-- Double-entry accounting
-
-### User Interface
-- Modern React with TypeScript
-- Responsive design with Tailwind CSS
-- Component library with shadcn/ui
-- Real-time data updates
-- Form validation and error handling
-
-## 🔧 Environment Variables
-
-### Backend (.env)
 ```env
-MONGODB_URI=mongodb://localhost:27017/Shiv_account
-DB_HOST=localhost
-DB_PORT=27017
-DB_NAME=Shiv_account
-JWT_SECRET=your-super-secret-jwt-key
-PORT=3000
-CORS_ORIGIN=http://localhost:5173
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# MongoDB Connection String
+MONGODB_URI=mongodb://localhost:27017/accounting_db
+
+# Authentication Keys
+JWT_SECRET=your_super_secret_jwt_key
+JWT_EXPIRES_IN=1d
+
+# Razorpay Integration Credentials
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 ```
-
-### Frontend (.env)
-```env
-REACT_APP_API_URL=http://localhost:3000/api
-REACT_APP_ENV=development
-```
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Error**
-   - Ensure MongoDB is running
-   - Check MongoDB connection string in `.env`
-   - Verify MongoDB service is started
-
-2. **Port Already in Use**
-   - Backend (3000): Change `PORT` in Backend/.env
-   - Frontend (5173): Vite will automatically use next available port
-
-3. **CORS Errors**
-   - Ensure backend is running on port 3000
-   - Check `CORS_ORIGIN` in Backend/.env matches frontend URL
-
-4. **Module Not Found Errors**
-   - Run `npm run install:all` to install all dependencies
-   - Clear node_modules and reinstall if needed
-
-### Development Tips
-
-- Use browser dev tools to inspect API calls
-- Check backend logs for detailed error information
-- Use MongoDB client to verify data persistence
-- Test API endpoints with tools like Postman or curl
-
-## 📚 API Documentation
-
-### Authentication Endpoints
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-
-### Master Data Endpoints
-- `GET /api/customers` - Get all contacts
-- `POST /api/customers` - Create contact
-- `PUT /api/customers/:id` - Update contact
-- `DELETE /api/customers/:id` - Delete contact
-
-- `GET /api/products` - Get all products
-- `POST /api/products` - Create product
-- `PUT /api/products/:id` - Update product
-- `DELETE /api/products/:id` - Delete product
-
-- `GET /api/taxes` - Get all tax rates
-- `POST /api/taxes` - Create tax rate
-
-- `GET /api/chart-of-accounts` - Get all accounts
-- `POST /api/chart-of-accounts` - Create account
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support and questions:
-- Check the troubleshooting section above
-- Review the API documentation
-- Create an issue in the repository
